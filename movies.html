@@ -1168,7 +1168,7 @@
                 const iframe = document.createElement('iframe');
                 iframe.id = 'vimeoPlayer';
                 
-                // Vimeo player URL with parameters
+                // Vimeo player URL with parameters and access token
                 const playerUrl = new URL(`https://player.vimeo.com/video/${vimeoId}`);
                 const params = {
                     autoplay: 1,
@@ -1181,7 +1181,8 @@
                     title: 0, // Hide title
                     byline: 0, // Hide byline
                     portrait: 0, // Hide portrait
-                    color: '00adef' // Vimeo blue color
+                    color: '00adef', // Vimeo blue color
+                    h: 'U/rYuXlp3acP0bfscXJHzX1z6GdVvDB7Sv5sxHNR0w7o4vBTAdUNOPGEuALv0oiQ6R9jxzV6hzwzeIcX1Y5SdFKxBjtnBYPYt6H3JE1MDDEEHG9p5xg+YsZ9GKROcqrH' // Your access token
                 };
                 
                 // Add parameters to URL
