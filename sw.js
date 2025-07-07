@@ -1,28 +1,19 @@
-const CACHE_NAME = 'faheemflix-v3';
-const urlsToCache = [
+const CACHE_NAME = 'faheemflix-v4';
+const OFFLINE_URL = '/offline.html';
+const CORE_ASSETS = [
   '/',
   '/index.html',
   '/movies.html',
-  '/config.js',
   '/manifest.json',
   '/pwa.js',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
-  '/icons/favicon.ico',
-  '/icons/favicon-16x16.png',
-  '/icons/favicon-32x32.png'
-];
-
-const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/favicon.ico'
 ];
 
 // Install event - cache core assets
 self.addEventListener('install', event => {
+  console.log('Service Worker installing.');
   self.skipWaiting();
   
   event.waitUntil(
@@ -36,27 +27,28 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
+  console.log('Service Worker activating.');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
-            console.log('[Service Worker] Clearing old cache');
+            console.log('[Service Worker] Removing old cache:', cache);
             return caches.delete(cache);
           }
         })
       );
     })
   );
+  return self.clients.claim();
 });
 
 // Fetch event - network first, then cache
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
-  
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) return;
+  // Skip non-GET requests and chrome-extension URLs
+  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
 
   // Handle navigation requests
   if (event.request.mode === 'navigate') {
@@ -74,7 +66,7 @@ self.addEventListener('fetch', event => {
         .catch(() => {
           // If network fails, try to get from cache
           return caches.match(event.request)
-            .then(response => response || caches.match('/offline.html'));
+            .then(response => response || caches.match(OFFLINE_URL));
         })
     );
     return;
@@ -99,31 +91,26 @@ self.addEventListener('fetch', event => {
 
             // Clone the response
             const responseToCache = response.clone();
-
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
               });
 
             return response;
-          }
-        );
+          });
       })
-    );
+      .catch(() => {
+        // If both cache and network fail, show offline page for HTML requests
+        if (event.request.headers.get('accept').includes('text/html')) {
+          return caches.match(OFFLINE_URL);
+        }
+      })
+  );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
+// Listen for the 'message' event (for PWA installation)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
