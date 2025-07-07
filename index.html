@@ -1283,10 +1283,9 @@
                 newWorker.addEventListener('statechange', () => {
                   console.log('🔄 Service worker state changed:', newWorker.state);
                   
-                  // When the new service worker is ready to activate
                   if (newWorker.state === 'installed') {
                     if (navigator.serviceWorker.controller) {
-                      console.log('🆕 New content is available; please refresh.');
+                      console.log('🆕 New content is available; refreshing...');
                       // Auto-refresh when new content is available
                       newWorker.postMessage({ action: 'skipWaiting' });
                     } else {
@@ -1296,106 +1295,140 @@
                 });
               });
               
-              // Check if the page is being loaded from a service worker
-              if (navigator.serviceWorker.controller) {
-                console.log('ℹ️ This page is currently controlled by service worker:', navigator.serviceWorker.controller);
-              } else {
-                console.log('ℹ️ This page is not currently controlled by a service worker.');
-              }
+              // Listen for messages from service worker
+              navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'INSTALL_AVAILABLE') {
+                  console.log('New version available, reloading...');
+                  window.location.reload();
+                }
+              });
               
-              // Check for service worker updates every hour
+              // Check for updates every hour
               setInterval(() => {
                 console.log('🔄 Checking for service worker updates...');
                 registration.update().catch(err => 
-                  console.log('Error checking for service worker updates:', err)
+                  console.log('Error checking for updates:', err)
                 );
-              }, 60 * 60 * 1000); // Check every hour
+              }, 60 * 60 * 1000);
             })
             .catch(function(error) {
               console.error('❌ ServiceWorker registration failed:', error);
             });
             
-          // Listen for controller changes (when a new service worker takes over)
+          // Handle controller changes
           navigator.serviceWorker.addEventListener('controllerchange', () => {
             console.log('🔄 Controller changed, reloading page...');
             window.location.reload();
           });
         });
-      } else {
-        console.warn('⚠️ Service Worker API is not supported in this browser');
       }
       
-      // Handle beforeinstallprompt event
+      // PWA Installation Handler
       let deferredPrompt;
       const installButton = document.getElementById('installAppBtn');
       
+      // Show install button if PWA can be installed
+      function showInstallPromotion() {
+        if (installButton) {
+          installButton.style.display = 'flex';
+          installButton.addEventListener('click', installApp);
+        }
+      }
+      
+      // Hide install button if PWA is already installed
+      function hideInstallPromotion() {
+        if (installButton) {
+          installButton.style.display = 'none';
+          installButton.removeEventListener('click', installApp);
+        }
+      }
+      
+      // Handle install button click
+      async function installApp() {
+        if (!deferredPrompt) return;
+        
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        
+        // Reset the deferred prompt variable
+        deferredPrompt = null;
+        
+        // Hide the install button
+        hideInstallPromotion();
+      }
+      
+      // Listen for beforeinstallprompt event
       window.addEventListener('beforeinstallprompt', (e) => {
         console.log('beforeinstallprompt event fired');
         
         // Prevent Chrome 67 and earlier from automatically showing the prompt
         e.preventDefault();
         
-        // Stash the event so it can be triggered later
+        // Stash the event
         deferredPrompt = e;
         
-        // Show the install button if it exists
-        if (installButton) {
-          installButton.style.display = 'block';
-          
-          installButton.addEventListener('click', () => {
-            // Show the install prompt
-            deferredPrompt.prompt();
-            
-            // Wait for the user to respond to the prompt
-            deferredPrompt.userChoice.then((choiceResult) => {
-              if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-              } else {
-                console.log('User dismissed the install prompt');
-              }
-              
-              // Reset the deferredPrompt variable
-              deferredPrompt = null;
-              
-              // Hide the install button
-              if (installButton) {
-                installButton.style.display = 'none';
-              }
-            });
-          });
-        }
+        // Show the install button
+        showInstallPromotion();
       });
       
       // Track successful installation
       window.addEventListener('appinstalled', (evt) => {
         console.log('App was installed successfully');
-        
-        // Hide the install button if it exists
-        if (installButton) {
-          installButton.style.display = 'none';
-        }
+        hideInstallPromotion();
       });
       
-      // Check if the app is running in standalone mode
+      // Check if app is running in standalone mode
       function checkDisplayMode() {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                            window.navigator.standalone === true;
         
         if (isStandalone) {
           console.log('App is running in standalone mode');
-          // Hide install button when running as PWA
-          if (installButton) {
-            installButton.style.display = 'none';
-          }
+          hideInstallPromotion();
         }
         return isStandalone;
       }
       
-      // Check display mode on page load
+      // Initial check
       checkDisplayMode();
       
-      // Listen for changes in display mode
+      // Listen for display mode changes
       window.matchMedia('(display-mode: standalone)').addEventListener('change', checkDisplayMode);
+      
+      // iOS detection for PWA install prompt
+      const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+      };
+      
+      // Check if in standalone mode or fullscreen
+      const isInStandaloneMode = () => 
+        (window.matchMedia('(display-mode: standalone)').matches) ||
+        (window.navigator.standalone) ||
+        document.referrer.includes('android-app://');
+      
+      // Show install prompt for iOS
+      if (isIos() && !isInStandaloneMode()) {
+        const iosInstallPrompt = document.createElement('div');
+        iosInstallPrompt.innerHTML = `
+          <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; 
+                      background: #e50914; color: white; padding: 15px; 
+                      border-radius: 8px; z-index: 1000; text-align: center;
+                      box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <p>Install FaheemFlix for a better experience</p>
+            <p style="font-size: 0.9em; margin-top: 5px;">
+              Tap <span style="font-weight: bold;">Share</span> then <span style="font-weight: bold;">Add to Home Screen</span>
+            </p>
+            <button style="position: absolute; top: 5px; right: 5px; background: none; 
+                         border: none; color: white; font-size: 16px; cursor: pointer;"
+                    onclick="this.parentElement.style.display='none';">
+              ×
+            </button>
+          </div>
+        `;
+        document.body.appendChild(iosInstallPrompt);
+      }
     </script>
     
     <!-- PWA Install Button -->
