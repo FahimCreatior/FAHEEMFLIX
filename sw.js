@@ -1,4 +1,4 @@
-const CACHE_NAME = 'faheemflix-v5';
+const CACHE_NAME = 'faheemflix-v6';
 const OFFLINE_URL = '/offline.html';
 const CORE_ASSETS = [
   '/',
@@ -8,6 +8,7 @@ const CORE_ASSETS = [
   '/pwa.js',
   '/offline.html',
   '/browserconfig.xml',
+  '/config.js',
   // Icons
   '/icons/icon-72x72.png',
   '/icons/icon-96x96.png',
@@ -25,29 +26,38 @@ const CORE_ASSETS = [
   '/icons/mstile-70x70.png',
   '/icons/mstile-150x150.png',
   '/icons/mstile-310x150.png',
-  '/icons/mstile-310x310.png',
-  // External resources
+  '/icons/mstile-310x310.png'
+];
+
+// External resources to cache
+const EXTERNAL_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap'
+  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap',
+  'https://image.tmdb.org/t/p/w500',
+  'https://image.tmdb.org/t/p/original'
 ];
 
 // Install event - cache core assets
 self.addEventListener('install', event => {
   console.log('[Service Worker] Installing...');
   
-  // Force the waiting service worker to become the active service worker
+  // Skip waiting to activate the new service worker immediately
   self.skipWaiting();
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[Service Worker] Caching core assets');
-        return cache.addAll(CORE_ASSETS)
-          .then(() => {
-            console.log('[Service Worker] Core assets cached');
-            return self.skipWaiting();
-          })
-          .catch(error => {
+        
+        // Cache core assets
+        return Promise.all([
+          cache.addAll(CORE_ASSETS)
+            .then(() => console.log('[Service Worker] Core assets cached')),
+          cache.addAll(EXTERNAL_ASSETS.map(url => new Request(url, { mode: 'no-cors' })))
+            .then(() => console.log('[Service Worker] External assets cached'))
+        ]);
+      })
+      .catch(error => {
             console.error('[Service Worker] Error caching core assets:', error);
           });
       })
@@ -78,14 +88,132 @@ self.addEventListener('activate', event => {
 });
 
 // Fetch event handler
+// Handle fetch events with different caching strategies
 self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
   
   // Skip non-GET requests and chrome-extension URLs
-  if (request.method !== 'GET' || request.url.startsWith('chrome-extension://')) {
+  if (request.method !== 'GET' || url.protocol === 'chrome-extension:') {
     return;
   }
+  
+  // Handle API requests with network-first strategy
+  if (url.hostname === 'api.themoviedb.org') {
+    event.respondWith(
+      fetchAndCache(request, 'api-cache')
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+  
+  // Handle image requests with cache-first strategy
+  if (url.hostname === 'image.tmdb.org') {
+    event.respondWith(
+      cacheFirst(request, 'images-cache')
+    );
+    return;
+  }
+  
+  // For all other requests, try cache first, then network
+  event.respondWith(
+    cacheFirst(request, CACHE_NAME)
+  );
+});
+
+// Network-first strategy with fallback to cache
+async function fetchAndCache(request, cacheName) {
+  try {
+    // Always try to fetch from network first
+    const networkResponse = await fetch(request);
+    
+    // If we got a valid response, cache it
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    console.log('[Service Worker] Network request failed, serving from cache', error);
+    
+    // If network fails, try to get from cache
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // If not in cache and we're offline, show offline page for HTML requests
+    if (request.headers.get('accept').includes('text/html')) {
+      return caches.match(OFFLINE_URL);
+    }
+    
+    throw error;
+  }
+}
+
+// Cache-first strategy with network fallback
+async function cacheFirst(request, cacheName) {
+  try {
+    // Try to get from cache first
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // If not in cache, fetch from network
+    const networkResponse = await fetch(request);
+    
+    // If we got a valid response, cache it
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    console.log('[Service Worker] Error in cacheFirst:', error);
+    
+    // If we're offline and the request is for HTML, show offline page
+    if (request.headers.get('accept').includes('text/html')) {
+      return caches.match(OFFLINE_URL);
+    }
+    
+    throw error;
+  }
+}
+
+// Clean up old caches during activation
+self.addEventListener('activate', event => {
+  console.log('[Service Worker] Activating...');
+  
+  // Remove old caches
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(name => name !== CACHE_NAME && name.startsWith('faheemflix-'))
+          .map(name => {
+            console.log('[Service Worker] Deleting old cache:', name);
+            return caches.delete(name);
+          })
+      );
+    })
+  );
+  
+  // Take control of all clients immediately
+  event.waitUntil(clients.claim());
+  
+  console.log('[Service Worker] Activated and ready to handle fetches');
+});
+
+// Listen for messages from the page
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
   
   // Handle navigation requests
   if (request.mode === 'navigate') {
