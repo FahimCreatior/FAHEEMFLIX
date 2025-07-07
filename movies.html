@@ -1150,37 +1150,97 @@
             const page = document.getElementById('movieDetailsPage');
             const vimeoId = page.dataset.vimeoId;
             
+            if (!vimeoId) {
+                console.error('No Vimeo ID provided');
+                alert('Sorry, this video is not available.');
+                return;
+            }
+            
             // Show the Vimeo player container
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
-            // Create new iframe for the video
-            playerWrapper.innerHTML = `
-                <iframe 
-                    id="vimeoPlayer" 
-                    src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&controls=1&playsinline=0&transparent=0&background=0" 
-                    allow="autoplay; fullscreen; picture-in-picture" 
-                    allowfullscreen
-                    webkitallowfullscreen
-                    mozallowfullscreen>
-                </iframe>
-            `;
+            // Clear any existing player
+            playerWrapper.innerHTML = '';
             
-            playerContainer.style.display = 'block';
+            try {
+                // Create new iframe for the video with better configuration
+                const iframe = document.createElement('iframe');
+                iframe.id = 'vimeoPlayer';
+                
+                // Vimeo player URL with parameters
+                const playerUrl = new URL(`https://player.vimeo.com/video/${vimeoId}`);
+                const params = {
+                    autoplay: 1,
+                    muted: 1, // Start muted for autoplay to work in most browsers
+                    controls: 1,
+                    playsinline: 0,
+                    transparent: 0,
+                    background: 0,
+                    dnt: 1, // Respect Do Not Track
+                    title: 0, // Hide title
+                    byline: 0, // Hide byline
+                    portrait: 0, // Hide portrait
+                    color: '00adef' // Vimeo blue color
+                };
+                
+                // Add parameters to URL
+                Object.entries(params).forEach(([key, value]) => {
+                    playerUrl.searchParams.set(key, value);
+                });
+                
+                iframe.src = playerUrl.toString();
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.frameBorder = '0';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                
+                // Add error handling
+                iframe.onerror = function() {
+                    playerWrapper.innerHTML = `
+                        <div class="video-error" style="color: white; text-align: center; padding: 20px;">
+                            <p>Unable to load video. Please try again later.</p>
+                            <button onclick="closeVideoPlayer()" style="margin-top: 10px; padding: 8px 16px; background: #e50914; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Close
+                            </button>
+                        </div>
+                    `;
+                };
+                
+                playerWrapper.appendChild(iframe);
+                playerContainer.style.display = 'block';
 
-            // Request fullscreen mode
-            if (playerContainer.requestFullscreen) {
-                playerContainer.requestFullscreen();
-            } else if (playerContainer.webkitRequestFullscreen) { // Safari
-                playerContainer.webkitRequestFullscreen();
-            } else if (playerContainer.msRequestFullscreen) { // IE11
-                playerContainer.msRequestFullscreen();
+                // Request fullscreen mode with better browser compatibility
+                const requestFullscreen = 
+                    playerContainer.requestFullscreen ||
+                    playerContainer.webkitRequestFullscreen ||
+                    playerContainer.msRequestFullscreen;
+                
+                if (requestFullscreen) {
+                    requestFullscreen.call(playerContainer).catch(err => {
+                        console.error('Error attempting to enable fullscreen:', err);
+                    });
+                }
+
+                // Try to rotate to landscape if on a mobile device
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(error => {
+                        console.log('Screen orientation lock not supported:', error);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error initializing Vimeo player:', error);
+                playerWrapper.innerHTML = `
+                    <div class="video-error" style="color: white; text-align: center; padding: 20px;">
+                        <p>Error loading video player. Please try again.</p>
+                        <button onclick="closeVideoPlayer()" style="margin-top: 10px; padding: 8px 16px; background: #e50914; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Close
+                        </button>
+                    </div>
+                `;
             }
-
-            // Rotate the screen to landscape mode
-            screen.orientation.lock('landscape').catch((error) => {
-                console.error('Screen orientation lock failed:', error);
-            });
         }
 
         // Close the movie details page when the back button is pressed
