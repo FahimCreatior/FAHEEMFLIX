@@ -1,0 +1,97 @@
+<!-- PWA Install Button Component -->
+<button id="installAppBtn" class="pwa-install-btn" aria-label="Install FaheemFlix App" title="Install FaheemFlix App">
+  <i class="fas fa-download"></i> Install App
+</button>
+
+<style>
+  /* PWA Install Button Styles */
+  .pwa-install-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: none; /* Hidden by default, shown by JS when needed */
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #e50914 0%, #b00710 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .pwa-install-btn i {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+  
+  .pwa-install-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #f40612 0%, #d60c18 100%);
+  }
+  
+  .pwa-install-btn:active {
+    transform: translateY(1px);
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(229, 9, 20, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(229, 9, 20, 0);
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .pwa-install-btn {
+      bottom: 70px; /* Above mobile navigation */
+      right: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .pwa-install-btn {
+      bottom: 60px;
+      right: 10px;
+      padding: 8px 12px 8px 10px;
+      font-size: 12px;
+    }
+    
+    .pwa-install-btn i {
+      margin-right: 5px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<script>
+// This script will be moved to the main PWA script
+// It's included here for standalone testing of the button
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw-new.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful');
+      })
+      .catch(error => {
+        console.log('ServiceWorker registration failed: ', error);
+      });
+  });
+}
+</script>
