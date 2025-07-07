@@ -581,93 +581,6 @@
         </div>
     </header>
 
-    <!-- Movie Details Modal with Vimeo Player -->
-    <div id="movieModal" class="modal">
-        <div id="modalContent" class="modal-content"></div>
-    </div>
-    
-    <style>
-        /* Modal styles for Vimeo player */
-        .modal-content {
-            background: #181818;
-            color: #fff;
-            max-width: 900px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border-radius: 8px;
-            position: relative;
-        }
-
-        #vimeo-player {
-            width: 100%;
-            background: #000;
-        }
-
-        .modal-poster {
-            width: 100%;
-            max-height: 70vh;
-            overflow: hidden;
-        }
-
-        .modal-poster img {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-        }
-
-        .modal-details {
-            padding: 20px;
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .modal-meta {
-            color: #46d369;
-            margin-bottom: 15px;
-        }
-
-        .modal-meta span {
-            margin-right: 15px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background-color: #e50914;
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: rgba(109, 109, 110, 0.7);
-            color: white;
-        }
-
-        .btn i {
-            font-size: 1.2rem;
-        }
-    </style>
-
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
@@ -821,10 +734,97 @@
         </div>
     </footer>
 
+    <!-- Movie Details Page -->
+    <div class="movie-details-page" id="movieDetailsPage">
+        <div class="movie-details-header" id="movieDetailsHeader">
+            <!-- Back Arrow -->
+            <div class="back-arrow" onclick="closeMovieDetails()">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+        </div>
+        <div class="movie-details-content">
+            <h1 id="movieDetailsTitle"></h1>
+            <div id="movieDetailsMeta" class="movie-details-meta"></div>
+            <div class="movie-details-buttons">
+                <button class="btn btn-primary" onclick="playVideo()">
+                    <i class="fas fa-play"></i> Play Now
+                </button>
+            </div>
+            <p id="movieDetailsDescription"></p>
+            <div class="movie-details-info">
+                <p><strong>Starring:</strong> <span id="movieDetailsStarring"></span></p>
+                <p><strong>Director:</strong> <span id="movieDetailsDirector"></span></p>
+            </div>
+        </div>
+        <div class="movie-details-footer">
+            <div> My List</div>
+            <div> Rate</div>
+            <div> Share</div>
+        </div>
+    </div>
+
+    <style>
+        #vimeoPlayerContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        #vimeoPlayerWrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1200px;
+            height: 0;
+            padding-bottom: 50.625%; /* 16:9 Aspect Ratio (9 / 16 = 0.5625) */
+        }
+
+        #vimeoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-back-arrow {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.3s ease;
+        }
+
+        .video-back-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+
+    <!-- Add a container for the Vimeo player -->
+    <div id="vimeoPlayerContainer">
+        <div class="video-back-arrow" onclick="closeVideoPlayer()">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+        <div id="vimeoPlayerWrapper"></div>
+    </div>
+
     <!-- Add Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
-    <!-- Vimeo Player API -->
-    <script src="https://player.vimeo.com/api/player.js"></script>
     
     <script>
         // TMDB API Configuration
@@ -854,121 +854,6 @@
             }
         }
 
-        // Global variable to store Vimeo player instance
-        let vimeoPlayer = null;
-
-        // Function to show movie details with Vimeo player
-        function showMovieDetails(title, posterUrl, rating, year, runtime, overview, cast, director, videoKey) {
-            const modal = document.getElementById('movieModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            // Create player container or poster
-            const mediaHtml = videoKey ? `
-                <div id="vimeo-player" style="width: 100%; aspect-ratio: 16/9;"></div>
-            ` : `
-                <div class="modal-poster">
-                    <img src="${posterUrl}" alt="${title}">
-                </div>
-            `;
-
-            const detailsHtml = `
-                ${mediaHtml}
-                <div class="modal-details">
-                    <h2>${title}</h2>
-                    <div class="modal-meta">
-                        <span class="rating">${rating}</span>
-                        <span>${year}</span>
-                        ${runtime ? `<span>${runtime}</span>` : ''}
-                    </div>
-                    <p>${overview || 'No description available.'}</p>
-                    ${cast && cast !== 'N/A' ? `<p><strong>Cast:</strong> ${cast}</p>` : ''}
-                    ${director && director !== 'N/A' ? `<p><strong>Director:</strong> ${director}</p>` : ''}
-                    <div class="modal-buttons">
-                        <button class="btn btn-primary" id="playButton">
-                            <i class="fas fa-play"></i> ${videoKey ? 'Play' : 'Watch Trailer'}
-                        </button>
-                        <button class="btn btn-secondary"><i class="fas fa-plus"></i> My List</button>
-                    </div>
-                </div>
-            `;
-            
-            modalContent.innerHTML = detailsHtml;
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-
-            // Initialize Vimeo player if video key exists
-            if (videoKey && typeof Vimeo !== 'undefined') {
-                try {
-                    vimeoPlayer = new Vimeo.Player('vimeo-player', {
-                        id: videoKey,
-                        width: '100%',
-                        responsive: true,
-                        autoplay: false,
-                        muted: true,
-                        transparent: false,
-                        autopause: true,
-                        title: false,
-                        byline: false,
-                        portrait: false,
-                        controls: true
-                    });
-
-                    // Play button functionality
-                    const playButton = document.getElementById('playButton');
-                    if (playButton) {
-                        playButton.onclick = function() {
-                            vimeoPlayer.play();
-                            playButton.style.display = 'none';
-                        };
-                    }
-                } catch (error) {
-                    console.error('Error initializing Vimeo player:', error);
-                    // Fallback to poster if Vimeo player fails
-                    if (posterUrl) {
-                        const vimeoPlayerEl = document.getElementById('vimeo-player');
-                        if (vimeoPlayerEl) {
-                            vimeoPlayerEl.innerHTML = `
-                                <div class="modal-poster">
-                                    <img src="${posterUrl}" alt="${title}">
-                                </div>
-                            `;
-                        }
-                    }
-                }
-            }
-
-            // Close modal when clicking outside content
-            modal.onclick = function(event) {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            };
-
-            // Close modal with Escape key
-            const closeOnEscape = function(event) {
-                if (event.key === 'Escape') {
-                    closeModal();
-                    document.removeEventListener('keydown', closeOnEscape);
-                }
-            };
-            document.addEventListener('keydown', closeOnEscape);
-
-            function closeModal() {
-                // Pause and unload Vimeo player when closing modal
-                if (vimeoPlayer) {
-                    vimeoPlayer.unload().then(() => {
-                        vimeoPlayer = null;
-                    }).catch(error => {
-                        console.error('Error unloading Vimeo player:', error);
-                    });
-                }
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-                // Clean up event listeners
-                document.removeEventListener('keydown', closeOnEscape);
-            }
-        }
-
         // Function to create movie card
         function createMovieCard(movie) {
             if (!movie.poster_path) return ''; // Skip if no poster
@@ -988,31 +873,15 @@
             const year = movie.release_date ? movie.release_date.split('-')[0] : 
                           movie.first_air_date ? movie.first_air_date.split('-')[0] : 'N/A';
             
-            // Only add click handler for Continue Watching section
-            const isContinueWatching = ['12345', '54321', '67890'].includes(movie.id.toString());
-            const videoKey = isContinueWatching ? 
-                ({
-                    '12345': 'yQEondeGvSc',
-                    '54321': 'ndl1W4ltcmg',
-                    '67890': 'eW7TwdAyYWk'
-                }[movie.id] || '') : '';
-            
-            const onClick = isContinueWatching ? 
-                `onclick="showMovieDetails('${escapeString(title)}', '${movie.poster_path ? IMAGE_BASE_URL + movie.poster_path : ''}', '${rating}%', '${year}', '${movie.runtime || 'N/A'}', '${escapeString(movie.overview || '')}', '${escapeString(movie.cast || 'N/A')}', '${escapeString(movie.director || 'N/A')}', '${videoKey}')"` : '';
-            
             return `
-                <div class="movie-card" data-id="${movie.id}" ${onClick}>
-                    <img src="${movie.poster_path ? IMAGE_BASE_URL + movie.poster_path : ''}" alt="${title}" class="movie-poster" loading="lazy">
+                <div class="movie-card" data-id="${movie.id}">
+                    <img src="${IMAGE_BASE_URL}${movie.poster_path}" alt="${title}" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">${title}</h3>
                         <div class="movie-meta">
                             <span class="rating">${rating}% Match</span>
                             <span>${year}</span>
                         </div>
-                        ${isContinueWatching ? `
-                        <div class="progress-bar">
-                            <div class="progress" style="width: ${{'12345': '65', '54321': '45', '67890': '80'}[movie.id] || '0'}%"></div>
-                        </div>` : ''}
                     </div>
                 </div>
             `;
@@ -1054,34 +923,34 @@
             }
         }
 
-            // Initialize the page
-            document.addEventListener('DOMContentLoaded', () => {
-                // Update category titles and populate with movies
-                categories.forEach(category => {
-                    const titleElement = document.querySelector(`#${category.id} + .category-title`);
-                    if (titleElement) {
-                        titleElement.textContent = category.title;
-                    }
-                    populateCategory(category.id, category.url);
-                });
-
-                // Initialize navigation arrows
-                initNavigationArrows();
-
-                // Add scroll event for header
-                handleHeaderScroll();
-                
-                // Initialize search functionality
-                initSearch();
-                
-                // Initialize movie categories
-                initCategories();
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Update category titles and populate with movies
+            categories.forEach(category => {
+                const titleElement = document.querySelector(`#${category.id} + .category-title`);
+                if (titleElement) {
+                    titleElement.textContent = category.title;
+                }
+                populateCategory(category.id, category.url);
             });
+
+            // Initialize navigation arrows
+            initNavigationArrows();
+
+            // Header scroll effect
+            handleHeaderScroll();
             
-            // Function to handle header scroll effect
-            function handleHeaderScroll() {
-                const header = document.querySelector('.header');
-                window.addEventListener('scroll', () => {
+            // Initialize search functionality
+            initSearch();
+            
+            // Initialize movie categories
+            initCategories();
+        });
+        
+        // Function to handle header scroll effect
+        function handleHeaderScroll() {
+            const header = document.querySelector('.header');
+            window.addEventListener('scroll', () => {
                 if (window.scrollY > 50) {
                     header.classList.add('scrolled');
                 } else {
