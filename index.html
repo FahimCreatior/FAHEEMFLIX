@@ -760,7 +760,9 @@
         }
 
         .nav-menu {
-            display: flex;
+            display: none;
+            opacity: 0;
+            transform: translateX(100%);
             list-style: none;
             margin: 0;
             padding: 0;
@@ -779,6 +781,21 @@
             color: #e50914;
         }
 
+        @media (min-width: 769px) {
+            .nav-menu {
+                display: flex !important;
+                opacity: 1 !important;
+                transform: none !important;
+                position: static;
+                width: auto;
+                height: auto;
+                background: transparent;
+                flex-direction: row;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+
         @media (max-width: 768px) {
             .menu-toggle {
                 display: block;
@@ -787,14 +804,15 @@
             .nav-menu {
                 position: fixed;
                 top: 0;
-                right: -250px;
+                right: 0;
                 width: 250px;
                 height: 100vh;
-                background: rgba(0, 0, 0, 0.95);
+                background: rgba(0, 0, 0, 0.98);
                 flex-direction: column;
                 padding: 5rem 1rem 1rem;
                 box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
                 z-index: 999;
+                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
             }
 
             .nav-menu.active {
@@ -967,9 +985,29 @@
             const menuToggle = document.getElementById('menuToggle');
             const navMenu = document.getElementById('navMenu');
             
-            menuToggle.addEventListener('click', function() {
-                navMenu.classList.toggle('active');
-                document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+            // Show/hide menu on toggle button click
+            menuToggle.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event from bubbling to document
+                const isActive = navMenu.classList.toggle('active');
+                
+                if (isActive) {
+                    navMenu.style.display = 'flex';
+                    // Trigger reflow
+                    void navMenu.offsetWidth;
+                    navMenu.style.opacity = '1';
+                    navMenu.style.transform = 'translateX(0)';
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    navMenu.style.opacity = '0';
+                    navMenu.style.transform = 'translateX(100%)';
+                    // Wait for transition to complete before hiding
+                    setTimeout(() => {
+                        if (!navMenu.classList.contains('active')) {
+                            navMenu.style.display = 'none';
+                        }
+                    }, 300);
+                    document.body.style.overflow = '';
+                }
             });
             
             // Close menu when clicking on a link
@@ -977,15 +1015,40 @@
             navLinks.forEach(link => {
                 link.addEventListener('click', () => {
                     navMenu.classList.remove('active');
+                    navMenu.style.opacity = '0';
+                    navMenu.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        navMenu.style.display = 'none';
+                    }, 300);
                     document.body.style.overflow = '';
                 });
             });
             
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
-                if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+                if (window.innerWidth <= 768 && navMenu.classList.contains('active') && 
+                    !navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
                     navMenu.classList.remove('active');
+                    navMenu.style.opacity = '0';
+                    navMenu.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        navMenu.style.display = 'none';
+                    }, 300);
                     document.body.style.overflow = '';
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    // Reset styles on desktop
+                    navMenu.style.display = '';
+                    navMenu.style.opacity = '';
+                    navMenu.style.transform = '';
+                    document.body.style.overflow = '';
+                } else if (!navMenu.classList.contains('active')) {
+                    // Ensure menu is hidden on mobile if not active
+                    navMenu.style.display = 'none';
                 }
             });
         });
