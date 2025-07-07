@@ -1215,6 +1215,119 @@
         // Initialize
         createMovieCards(movies);
     </script>
-    <script src="/pwa.js"></script>
+    <!-- PWA Installation Script -->
+    <script>
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw-new.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+              
+              // Check for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                console.log('New service worker found...');
+                
+                newWorker.addEventListener('statechange', () => {
+                  console.log('Service worker state:', newWorker.state);
+                  
+                  // When the new service worker is ready to activate
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New content is available; please refresh.');
+                    // You can show a refresh button here if desired
+                    if (confirm('A new version is available. Would you like to update now?')) {
+                      newWorker.postMessage({ action: 'skipWaiting' });
+                      window.location.reload();
+                    }
+                  }
+                });
+              });
+              
+              // Check if the page is being loaded from a service worker
+              if (navigator.serviceWorker.controller) {
+                console.log('This page is currently controlled by:', navigator.serviceWorker.controller);
+              } else {
+                console.log('This page is not currently controlled by a service worker.');
+              }
+            })
+            .catch(function(error) {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+      
+      // Handle beforeinstallprompt event
+      let deferredPrompt;
+      const installButton = document.getElementById('installAppBtn');
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt event fired');
+        
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        
+        // Show the install button if it exists
+        if (installButton) {
+          installButton.style.display = 'block';
+          
+          installButton.addEventListener('click', () => {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+              } else {
+                console.log('User dismissed the install prompt');
+              }
+              
+              // Reset the deferredPrompt variable
+              deferredPrompt = null;
+              
+              // Hide the install button
+              if (installButton) {
+                installButton.style.display = 'none';
+              }
+            });
+          });
+        }
+      });
+      
+      // Track successful installation
+      window.addEventListener('appinstalled', (evt) => {
+        console.log('App was installed successfully');
+        
+        // Hide the install button if it exists
+        if (installButton) {
+          installButton.style.display = 'none';
+        }
+      });
+      
+      // Check if the app is running in standalone mode
+      function checkDisplayMode() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                           window.navigator.standalone === true;
+        
+        if (isStandalone) {
+          console.log('App is running in standalone mode');
+          // Hide install button when running as PWA
+          if (installButton) {
+            installButton.style.display = 'none';
+          }
+        }
+        return isStandalone;
+      }
+      
+      // Check display mode on page load
+      checkDisplayMode();
+      
+      // Listen for changes in display mode
+      window.matchMedia('(display-mode: standalone)').addEventListener('change', checkDisplayMode);
+    </script>
 </body>
 </html>
