@@ -1262,6 +1262,11 @@
         // Initialize
         createMovieCards(movies);
     </script>
+    <!-- PWA Install Button -->
+    <button id="installAppBtn" class="install-app-btn" aria-label="Install App">
+      <i class="fas fa-download"></i> Install App
+    </button>
+
     <!-- PWA Installation Script -->
     <script>
       // Enhanced Service Worker Registration
@@ -1347,15 +1352,29 @@
       async function installApp() {
         if (!deferredPrompt) return;
         
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to the install prompt: ${outcome}`);
-        
-        // Reset the deferred prompt variable
-        deferredPrompt = null;
-        
-        // Hide the install button
-        hideInstallPromotion();
+        try {
+          // Show the install prompt
+          deferredPrompt.prompt();
+          
+          // Wait for the user to respond to the prompt
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`User response to the install prompt: ${outcome}`);
+          
+          // Check if the app was installed
+          if (outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          
+          // Reset the deferred prompt variable
+          deferredPrompt = null;
+          
+          // Hide the install button
+          hideInstallPromotion();
+        } catch (error) {
+          console.error('Error during installation:', error);
+        }
       }
       
       // Listen for beforeinstallprompt event
@@ -1365,8 +1384,19 @@
         // Prevent Chrome 67 and earlier from automatically showing the prompt
         e.preventDefault();
         
-        // Stash the event
+        // Stash the event so it can be triggered later
         deferredPrompt = e;
+        
+        // Show the install button
+        if (installButton) {
+          installButton.style.display = 'flex';
+          
+          // Add click event listener to the install button
+          installButton.addEventListener('click', installApp);
+        }
+        
+        // Log that the install prompt is available
+        console.log('PWA install prompt available');
         
         // Show the install button
         showInstallPromotion();
@@ -1408,6 +1438,49 @@
         (window.navigator.standalone) ||
         document.referrer.includes('android-app://');
       
+      // Handle the install button click
+      function installApp() {
+        if (!deferredPrompt) return;
+        
+        // Show the install prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond to the prompt
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          
+          // Reset the deferred prompt variable
+          deferredPrompt = null;
+          
+          // Hide the install button
+          if (installButton) {
+            installButton.style.display = 'none';
+          }
+        });
+      }
+      
+      // Listen for app installed event
+      window.addEventListener('appinstalled', (event) => {
+        console.log('PWA was installed');
+        if (installButton) {
+          installButton.style.display = 'none';
+        }
+      });
+      
+      // Check if the app is already installed
+      window.addEventListener('load', () => {
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          console.log('App is running in standalone mode');
+          if (installButton) {
+            installButton.style.display = 'none';
+          }
+        }
+      });
+
       // Show install prompt for iOS
       if (isIos() && !isInStandaloneMode()) {
         const iosInstallPrompt = document.createElement('div');
