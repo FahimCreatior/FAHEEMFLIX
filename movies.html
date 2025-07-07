@@ -616,7 +616,7 @@
                 
                 <!-- Sample Movie Card 2 -->
                 <div class="movie-card" data-id="54321" onclick="showMovieDetails('The Witcher', 'https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg', '89%', '2021', '2h 58m', 'Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.', 'Henry Cavill, Anya Chalotra, Freya Allan, Joey Batey', 'Lauren Schmidt Hissrich', 'ndl1W4ltcmg')">
-                    <img src="https://ibb.co/JRCj89k6" alt="The Witcher" class="movie-poster" loading="lazy">
+                    <img src="https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg" alt="The Witcher" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">The Witcher</h3>
                         <div class="movie-meta">
@@ -868,34 +868,13 @@
                     .replace(/\n/g, ' ');
             };
 
-            const title = escapeString(movie.title);
-            const overview = escapeString(movie.overview || 'No description available.');
-            const cast = movie.credits ? 
-                movie.credits.cast.slice(0, 3).map(p => escapeString(p.name)).join(', ') : 'N/A';
-            const director = movie.credits ? 
-                (movie.credits.crew.find(c => c.job === 'Director')?.name ? 
-                 escapeString(movie.credits.crew.find(c => c.job === 'Director').name) : 'N/A') : 'N/A';
-            const videoKey = movie.videos && movie.videos.results[0]?.key ? 
-                escapeString(movie.videos.results[0].key) : '';
-            
+            const title = escapeString(movie.title || movie.name);
             const rating = movie.vote_average ? Math.round(movie.vote_average * 10) : 'N/A';
-            const year = movie.release_date ? movie.release_date.split('-')[0] : 'N/A';
-            const runtime = movie.runtime ? 
-                `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : 'N/A';
+            const year = movie.release_date ? movie.release_date.split('-')[0] : 
+                          movie.first_air_date ? movie.first_air_date.split('-')[0] : 'N/A';
             
             return `
-                <div class="movie-card" data-id="${movie.id}" 
-                     onclick="showMovieDetails(
-                         '${title}', 
-                         '${IMAGE_BASE_URL}${movie.poster_path}', 
-                         '${rating}%', 
-                         '${year}', 
-                         '${runtime}', 
-                         '${overview}', 
-                         '${cast}', 
-                         '${director}',
-                         '${videoKey}'
-                     )">
+                <div class="movie-card" data-id="${movie.id}">
                     <img src="${IMAGE_BASE_URL}${movie.poster_path}" alt="${title}" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">${title}</h3>
