@@ -3,20 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' https: data: blob:;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-      style-src 'self' 'unsafe-inline' https:;
-      img-src 'self' data: blob: https:;
-      media-src 'self' https: blob:;
-      connect-src 'self' https: wss:;
-      font-src 'self' https: data:;
-      frame-src 'self' https:;
-      object-src 'none';
-      base-uri 'self';
-      form-action 'self';
-      frame-ancestors 'self';
-    ">
     <title>FaheemFlix - Movies</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
@@ -405,39 +391,6 @@
             gap: 5px;
         }
 
-        /* Video Player Container */
-        .video-player-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .video-player-header {
-            padding: 15px;
-            display: flex;
-            justify-content: flex-end;
-        }
-        
-        .video-player-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .video-player-wrapper iframe {
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 16/9;
-        }
-        
         .movie-details-page {
             position: fixed;
             top: 0;
@@ -634,7 +587,7 @@
             <h1>Unlimited movies, TV shows, and more.</h1>
             <p>Watch anywhere. Cancel anytime.</p>
             <div class="hero-buttons">
-                <button class="btn btn-primary btn-play-movie"><i class="fas fa-play"></i> Play</button>
+                <button class="btn btn-primary"><i class="fas fa-play"></i> Play</button>
                 <button class="btn btn-secondary"><i class="fas fa-info-circle"></i> More Info</button>
             </div>
         </div>
@@ -642,61 +595,12 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Trending Now -->
-        <h2 class="category-title">Trending Now</h2>
-        <section class="category">
-            <div class="movies-row" id="trending">
-                <!-- Movie cards will be dynamically inserted here -->
-            </div>
-            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
-            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
-        </section>
-
-        <!-- Popular on FaheemFlix -->
-        <h2 class="category-title">Popular on FaheemFlix</h2>
-        <section class="category">
-            <div class="movies-row" id="popular">
-                <!-- Movie cards will be dynamically inserted here -->
-            </div>
-            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
-            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
-        </section>
-
-        <!-- Top Rated -->
-        <h2 class="category-title">Top Rated</h2>
-        <section class="category">
-            <div class="movies-row" id="top_rated">
-                <!-- Movie cards will be dynamically inserted here -->
-            </div>
-            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
-            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
-        </section>
-
-        <!-- Upcoming Releases -->
-        <h2 class="category-title">Upcoming Releases</h2>
-        <section class="category">
-            <div class="movies-row" id="upcoming">
-                <!-- Movie cards will be dynamically inserted here -->
-            </div>
-            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
-            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
-        </section>
-
-        <!-- Now Playing -->
-        <h2 class="category-title">Now Playing</h2>
-        <section class="category">
-            <div class="movies-row" id="now_playing">
-                <!-- Movie cards will be dynamically inserted here -->
-            </div>
-            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
-            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
-        </section>
         <!-- Continue Watching -->
         <h2 class="category-title">Continue Watching</h2>
         <section class="category">
             <div class="movies-row" id="continue_watching">
                 <!-- Sample Movie Card 1 -->
-                <div class="movie-card" data-id="12345" data-vimeo-id="1087366972" onclick="showMovieDetails('Stranger Things', 'https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg', '95%', '2022', '3h 12m', 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.', 'Millie Bobby Brown, Finn Wolfhard, Winona Ryder, David Harbour', 'The Duffer Brothers')">
+                <div class="movie-card" data-id="12345" onclick="showMovieDetails('Stranger Things', 'https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg', '95%', '2022', '3h 12m', 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.', 'Millie Bobby Brown, Finn Wolfhard, Winona Ryder, David Harbour', 'The Duffer Brothers', '1087366972')">
                     <img src="https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg" alt="Stranger Things" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">Stranger Things</h3>
@@ -711,7 +615,7 @@
                 </div>
                 
                 <!-- Sample Movie Card 2 -->
-                <div class="movie-card" data-id="54321" data-vimeo-id="ndl1W4ltcmg" onclick="showMovieDetails('The Witcher', 'https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg', '89%', '2021', '2h 58m', 'Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.', 'Henry Cavill, Anya Chalotra, Freya Allan, Joey Batey', 'Lauren Schmidt Hissrich')">
+                <div class="movie-card" data-id="54321" onclick="showMovieDetails('The Witcher', 'https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg', '89%', '2021', '2h 58m', 'Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.', 'Henry Cavill, Anya Chalotra, Freya Allan, Joey Batey', 'Lauren Schmidt Hissrich', 'ndl1W4ltcmg')">
                     <img src="https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg" alt="The Witcher" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">The Witcher</h3>
@@ -726,7 +630,7 @@
                 </div>
                 
                 <!-- Sample Movie Card 3 -->
-                <div class="movie-card" data-id="67890" data-vimeo-id="eW7TwdAyYWk" onclick="showMovieDetails('The Mandalorian', 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', '92%', '2023', '2h 15m', 'After the fall of the Galactic Empire, a lone gunfighter makes his way through the lawless outer reaches of the galaxy.', 'Pedro Pascal, Gina Carano, Carl Weathers, Giancarlo Esposito', 'Jon Favreau')">
+                <div class="movie-card" data-id="67890" onclick="showMovieDetails('The Mandalorian', 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', '92%', '2023', '2h 15m', 'After the fall of the Galactic Empire, a lone gunfighter makes his way through the lawless outer reaches of the galaxy.', 'Pedro Pascal, Gina Carano, Carl Weathers, Giancarlo Esposito', 'Jon Favreau', 'eW7TwdAyYWk')">
                     <img src="https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg" alt="The Mandalorian" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">The Mandalorian</h3>
@@ -922,13 +826,11 @@
     <!-- Add Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
     
-    <script src="config.js"></script>
     <script>
         // TMDB API Configuration
-        const API_KEY = config.TMDB_API_KEY;
+        const API_KEY = 'd87e27aa77fbcfe8fbebfe5f40f4f215'; // FaheemFlix TMDB API Key
         const BASE_URL = 'https://api.themoviedb.org/3';
         const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-        const VIMEO_ACCESS_TOKEN = config.VIMEO_ACCESS_TOKEN;
         const BACKDROP_BASE_URL = 'https://image.tmdb.org/t/p/original';
 
         // Categories to fetch
@@ -988,44 +890,36 @@
         // Function to populate a category with movies
         async function populateCategory(categoryId, endpoint) {
             const container = document.getElementById(categoryId);
-            if (!container) {
-                console.error(`Container not found for category: ${categoryId}`);
-                return;
-            }
+            if (!container) return;
 
             // Show loading state
             container.innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                console.log(`Fetching movies for ${categoryId} from ${endpoint}`);
+                // Fetch movies for this category
                 const movies = await fetchMovies(endpoint);
                 
-                if (!movies || movies.length === 0) {
-                    console.warn(`No movies found for category: ${categoryId}`);
-                    container.innerHTML = '<div class="empty">No movies found.</div>';
-                    return;
-                }
-                
-                console.log(`Found ${movies.length} movies for ${categoryId}`);
-                
-                // Create and insert movie cards without additional API calls
-                container.innerHTML = movies
-                    .filter(movie => movie.poster_path) // Only include movies with posters
-                    .slice(0, 10) // Limit to 10 movies
+                // Get additional details for each movie
+                const moviesWithDetails = await Promise.all(
+                    movies.slice(0, 10).map(async (movie) => {
+                        try {
+                            const response = await fetch(`${BASE_URL}/movie/${movie.id}?api_key=${API_KEY}&append_to_response=credits,videos`);
+                            return await response.json();
+                        } catch (error) {
+                            console.error(`Error fetching details for movie ${movie.id}:`, error);
+                            return movie; // Return basic movie data if details fail
+                        }
+                    })
+                );
+
+                // Create and insert movie cards
+                container.innerHTML = moviesWithDetails
                     .map(movie => createMovieCard(movie))
                     .join('');
-                
-                console.log(`Successfully populated ${categoryId} with ${Math.min(movies.length, 10)} movies`);
-                
+
             } catch (error) {
                 console.error('Error populating category:', error);
-                container.innerHTML = `
-                    <div class="error">
-                        Failed to load movies. 
-                        <button onclick="populateCategory('${categoryId}', '${endpoint}')">
-                            Try Again
-                        </button>
-                    </div>`;
+                container.innerHTML = '<div class="error">Failed to load movies. Please try again later.</div>';
             }
         }
 
@@ -1048,6 +942,9 @@
             
             // Initialize search functionality
             initSearch();
+            
+            // Initialize movie categories
+            initCategories();
         });
         
         // Function to handle header scroll effect
@@ -1191,12 +1088,13 @@
             });
         }
 
-        // This function handles displaying movie details
-        function showMovieDetails(title, poster, rating, year, duration, description, cast, director) {
+        // This function handles displaying movie details and playing videos
+        // For Vimeo videos:
+        // 1. The vimeoId parameter should be your Vimeo video ID
+        // 2. Example: For video at vimeo.com/123456789, use '123456789' as vimeoId
+        // 3. The video will automatically play when the movie card is clicked
+        function showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId) {
             const page = document.getElementById('movieDetailsPage');
-            const card = event.currentTarget;
-            const vimeoId = card.getAttribute('data-vimeo-id');
-            
             document.getElementById('movieDetailsHeader').style.backgroundImage = `url(${poster})`;
             document.getElementById('movieDetailsTitle').textContent = title;
             document.getElementById('movieDetailsMeta').innerHTML = `
@@ -1207,19 +1105,13 @@
             document.getElementById('movieDetailsDescription').textContent = description;
             document.getElementById('movieDetailsStarring').textContent = cast;
             document.getElementById('movieDetailsDirector').textContent = director;
-            
-            // Update play button to include the vimeoId
-            const playButton = document.querySelector('.btn-play-movie');
-            if (playButton) {
-                playButton.onclick = function() {
-                    playVideo(vimeoId);
-                };
-            }
-            
             page.classList.add('active');
+            // Store the Vimeo ID for the current movie
+            page.dataset.vimeoId = vimeoId;
         }
 
         function closeVideoPlayer() {
+            // Hide and stop the video player
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
@@ -1248,12 +1140,16 @@
             // Hide the movie details page by removing the active class
             const page = document.getElementById('movieDetailsPage');
             page.classList.remove('active');
-            
+
             // Make sure video player is closed too
             closeVideoPlayer();
         }
 
-        function playVideo(vimeoId) {
+        function playVideo() {
+            // Get the current movie's Vimeo ID
+            const page = document.getElementById('movieDetailsPage');
+            const vimeoId = page.dataset.vimeoId;
+            
             if (!vimeoId) {
                 console.error('No Vimeo ID provided');
                 alert('Sorry, this video is not available.');
@@ -1268,7 +1164,7 @@
             playerWrapper.innerHTML = '';
             
             try {
-                // Create new iframe for the video
+                // Create new iframe for the video with better configuration
                 const iframe = document.createElement('iframe');
                 iframe.id = 'vimeoPlayer';
                 
@@ -1286,7 +1182,7 @@
                     byline: 0, // Hide byline
                     portrait: 0, // Hide portrait
                     color: '00adef', // Vimeo blue color
-                    h: VIMEO_ACCESS_TOKEN // Vimeo access token
+                    h: 'U/rYuXlp3acP0bfscXJHzX1z6GdVvDB7Sv5sxHNR0w7o4vBTAdUNOPGEuALv0oiQ6R9jxzV6hzwzeIcX1Y5SdFKxBjtnBYPYt6H3JE1MDDEEHG9p5xg+YsZ9GKROcqrH' // Your access token
                 };
                 
                 // Add parameters to URL
