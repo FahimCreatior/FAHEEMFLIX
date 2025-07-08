@@ -633,7 +633,7 @@
         <section class="category">
             <div class="movies-row" id="continue_watching">
                 <!-- Sample Movie Card 1 -->
-                <div class="movie-card" data-id="12345" onclick="showMovieDetails('Stranger Things', 'https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg', '95%', '2022', '3h 12m', 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.', 'Millie Bobby Brown, Finn Wolfhard, Winona Ryder, David Harbour', 'The Duffer Brothers')">
+                <div class="movie-card" data-id="12345" data-vimeo-id="1087366972" onclick="showMovieDetails('Stranger Things', 'https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg', '95%', '2022', '3h 12m', 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.', 'Millie Bobby Brown, Finn Wolfhard, Winona Ryder, David Harbour', 'The Duffer Brothers')">
                     <img src="https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg" alt="Stranger Things" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">Stranger Things</h3>
@@ -648,7 +648,7 @@
                 </div>
                 
                 <!-- Sample Movie Card 2 -->
-                <div class="movie-card" data-id="54321" onclick="showMovieDetails('The Witcher', 'https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg', '89%', '2021', '2h 58m', 'Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.', 'Henry Cavill, Anya Chalotra, Freya Allan, Joey Batey', 'Lauren Schmidt Hissrich')">
+                <div class="movie-card" data-id="54321" data-vimeo-id="ndl1W4ltcmg" onclick="showMovieDetails('The Witcher', 'https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg', '89%', '2021', '2h 58m', 'Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.', 'Henry Cavill, Anya Chalotra, Freya Allan, Joey Batey', 'Lauren Schmidt Hissrich')">
                     <img src="https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg" alt="The Witcher" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">The Witcher</h3>
@@ -663,7 +663,7 @@
                 </div>
                 
                 <!-- Sample Movie Card 3 -->
-                <div class="movie-card" data-id="67890" onclick="showMovieDetails('The Mandalorian', 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', '92%', '2023', '2h 15m', 'After the fall of the Galactic Empire, a lone gunfighter makes his way through the lawless outer reaches of the galaxy.', 'Pedro Pascal, Gina Carano, Carl Weathers, Giancarlo Esposito', 'Jon Favreau')">
+                <div class="movie-card" data-id="67890" data-vimeo-id="eW7TwdAyYWk" onclick="showMovieDetails('The Mandalorian', 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', '92%', '2023', '2h 15m', 'After the fall of the Galactic Empire, a lone gunfighter makes his way through the lawless outer reaches of the galaxy.', 'Pedro Pascal, Gina Carano, Carl Weathers, Giancarlo Esposito', 'Jon Favreau')">
                     <img src="https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg" alt="The Mandalorian" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">The Mandalorian</h3>
@@ -866,13 +866,6 @@
         const BASE_URL = 'https://api.themoviedb.org/3';
         const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
         const VIMEO_ACCESS_TOKEN = config.VIMEO_ACCESS_TOKEN;
-        
-        // Vimeo Video IDs mapping (movie_id: vimeo_id)
-        const VIMEO_VIDEOS = {
-            '12345': '1087366972',  // Stranger Things
-            '54321': 'ndl1W4ltcmg', // The Witcher
-            '67890': 'eW7TwdAyYWk'  // The Mandalorian
-        };
         const BACKDROP_BASE_URL = 'https://image.tmdb.org/t/p/original';
 
         // Categories to fetch
@@ -1134,8 +1127,7 @@
         function showMovieDetails(title, poster, rating, year, duration, description, cast, director) {
             const page = document.getElementById('movieDetailsPage');
             const card = event.currentTarget;
-            const movieId = card.getAttribute('data-id');
-            const vimeoId = VIMEO_VIDEOS[movieId];
+            const vimeoId = card.getAttribute('data-vimeo-id');
             
             document.getElementById('movieDetailsHeader').style.backgroundImage = `url(${poster})`;
             document.getElementById('movieDetailsTitle').textContent = title;
