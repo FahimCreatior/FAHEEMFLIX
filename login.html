@@ -127,8 +127,35 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth.js"></script>
     <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://mhmlywpwgciwiwbwsddf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1obWx5d3B3Z2Npd2l3YndzZGRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNzQwOTIsImV4cCI6MjA2NDk1MDA5Mn0.FRn-T36IhmD-Igc3eOxkJY3wlS6baqZbllcVw-EEO0U';
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Sign in function
+        async function signIn(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                return { data, error: null };
+            } catch (error) {
+                console.error('Sign in error:', error);
+                return { data: null, error };
+            }
+        }
+
+        // Get session function
+        async function getSession() {
+            return await supabase.auth.getSession();
+        }
+
+        // Form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -141,21 +168,34 @@
                 
                 if (error) throw error;
                 
-                // Redirect to home page on successful login
-                window.location.href = 'index.html';
+                // Show success message and redirect
+                errorElement.textContent = 'Login successful! Redirecting...';
+                errorElement.style.color = '#4caf50';
+                
+                // Redirect to home page after a short delay
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+                
             } catch (error) {
-                errorElement.textContent = error.message;
+                errorElement.textContent = error.message || 'Invalid email or password';
+                errorElement.style.color = '#e87c03';
             }
         });
 
         // Check if user is already logged in
         async function checkAuth() {
-            const { data } = await getSession();
-            if (data.session) {
-                window.location.href = 'index.html';
+            try {
+                const { data: { session } } = await getSession();
+                if (session) {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
             }
         }
 
+        // Initialize auth check
         checkAuth();
     </script>
 </body>
