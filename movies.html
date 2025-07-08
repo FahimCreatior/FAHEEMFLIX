@@ -628,6 +628,55 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Trending Now -->
+        <h2 class="category-title">Trending Now</h2>
+        <section class="category">
+            <div class="movies-row" id="trending">
+                <!-- Movie cards will be dynamically inserted here -->
+            </div>
+            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
+        </section>
+
+        <!-- Popular on FaheemFlix -->
+        <h2 class="category-title">Popular on FaheemFlix</h2>
+        <section class="category">
+            <div class="movies-row" id="popular">
+                <!-- Movie cards will be dynamically inserted here -->
+            </div>
+            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
+        </section>
+
+        <!-- Top Rated -->
+        <h2 class="category-title">Top Rated</h2>
+        <section class="category">
+            <div class="movies-row" id="top_rated">
+                <!-- Movie cards will be dynamically inserted here -->
+            </div>
+            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
+        </section>
+
+        <!-- Upcoming Releases -->
+        <h2 class="category-title">Upcoming Releases</h2>
+        <section class="category">
+            <div class="movies-row" id="upcoming">
+                <!-- Movie cards will be dynamically inserted here -->
+            </div>
+            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
+        </section>
+
+        <!-- Now Playing -->
+        <h2 class="category-title">Now Playing</h2>
+        <section class="category">
+            <div class="movies-row" id="now_playing">
+                <!-- Movie cards will be dynamically inserted here -->
+            </div>
+            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
+        </section>
         <!-- Continue Watching -->
         <h2 class="category-title">Continue Watching</h2>
         <section class="category">
@@ -977,9 +1026,6 @@
             
             // Initialize search functionality
             initSearch();
-            
-            // Initialize movie categories
-            initCategories();
         });
         
         // Function to handle header scroll effect
