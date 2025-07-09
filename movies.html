@@ -18,8 +18,7 @@
       frame-ancestors 'self';
     ">
     <title>FaheemFlix - Movies</title>
-    <!-- Add Auth0 SPA SDK -->
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
@@ -604,162 +603,24 @@
         }
     </style>
     
-    <!-- Add Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
     
-    <style>
-        /* Auth styles */
-        .auth-button {
-            background: #e50914;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.3s ease;
-        }
-        
-        .auth-button:hover {
-            background: #f40612;
-        }
-        
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-    </style>
+
 </head>
 <body>
     <header class="header">
         <div class="header-content">
             <a href="index.html" class="logo">FAHEEMFLIX</a>
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="movies.html" class="nav-link active">Movies</a>
-                <a href="#" class="nav-link">TV Shows</a>
-                <a href="#" class="nav-link">My List</a>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="movies.html" class="active">Movies</a>
+                <a href="#">TV Shows</a>
+                <a href="#">My List</a>
+                <a href="#">New & Popular</a>
             </nav>
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search movies..." class="search-input">
-                <button id="searchButton">Search</button>
-            </div>
-            <div id="login-container">
-                <button onclick="signInWithGoogle()" class="auth-button">
-                    <i class="icon icon-user"></i> Sign In with Google
-                </button>
-            </div>
-            <div id="user-profile" style="display: none; margin-left: 15px;">
-                <!-- User profile will be shown here -->
-            </div>
-        </div>
-    </header>
-    <script>
-      // Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyDbgEJmqKbmAFwSKfqHF7g8ENlAVtqoq3s",
-        authDomain: "authentication-faheemflix.firebaseapp.com",
-        projectId: "authentication-faheemflix",
-        storageBucket: "authentication-faheemflix.appspot.com",
-        messagingSenderId: "209153078463",
-        appId: "1:209153078463:web:c9c79058355d1ae98d020a",
-        measurementId: "G-7QT5XZQ89N"
-      };
-      
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      
-      // Sign in with Google
-      async function signInWithGoogle() {
-        try {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          await firebase.auth().signInWithPopup(provider);
-        } catch (error) {
-          console.error('Error signing in with Google:', error);
-          alert('Failed to sign in. Please try again.');
-        }
-      }
-      
-      // Sign out
-      function signOut() {
-        firebase.auth().signOut().then(() => {
-          // Sign-out successful
-        }).catch((error) => {
-          console.error('Error signing out:', error);
-        });
-      }
-      
-      // Update UI based on authentication state
-      function updateUI(user) {
-        const loginBtn = document.getElementById('login-btn');
-        const userProfile = document.getElementById('user-profile');
-        
-        if (user) {
-          // User is signed in
-          if (loginBtn) loginBtn.style.display = 'none';
-          if (userProfile) {
-            userProfile.style.display = 'flex';
-            userProfile.innerHTML = `
-              <div class="user-profile">
-                ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}" class="user-avatar">` : ''}
-                <span>Welcome, ${user.displayName || user.email}</span>
-                <button onclick="signOut()" class="auth-button">Sign Out</button>
-              </div>
-            `;
-          }
-        } else {
-          // User is signed out
-          if (loginBtn) {
-            loginBtn.style.display = 'block';
-            loginBtn.innerHTML = `
-              <button onclick="signInWithGoogle()" class="auth-button">
-                <i class="icon icon-user"></i> Sign In with Google
-              </button>
-            `;
-          }
-          if (userProfile) userProfile.style.display = 'none';
-        }
-      }
-      
-      // Listen for auth state changes
-      firebase.auth().onAuthStateChanged((user) => {
-        updateUI(user);
-      });
-      
-      // Initialize when the page loads
-      document.addEventListener('DOMContentLoaded', () => {
-        const user = firebase.auth().currentUser;
-        updateUI(user);
-      });
-    </script>
-
-    <header class="header">
-        <div class="header-left">
-            <a href="index.html" class="logo">FAHEEMFLIX</a>
-            <nav class="main-nav">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="#" class="nav-link">TV Shows</a>
-                <a href="movies.html" class="nav-link active">Movies</a>
-                <a href="#" class="nav-link">New & Popular</a>
-                <a href="#" class="nav-link">My List</a>
-                <a href="#" class="nav-link">Browse by Languages</a>
-            </nav>
-        </div>
-        <div class="header-right">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
                 <input type="text" placeholder="Search movies...">
+                <button><i class="fas fa-search"></i></button>
             </div>
             <div class="profile-menu">
                 <i class="fas fa-bell"></i>
