@@ -6,6 +6,59 @@
     <meta name="theme-color" content="#e50914">
     <meta name="description" content="Stream your favorite movies and shows on FaheemFlix">
     
+    <!-- Add these in the head section -->
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+<script>
+  // Configure Auth0
+  const auth0 = await createAuth0Client({
+    domain: "YOUR_AUTH0_DOMAIN",  // e.g., your-tenant.auth0.com
+    client_id: "YOUR_CLIENT_ID",
+    redirect_uri: window.location.origin,
+    cacheLocation: 'localstorage',
+    useRefreshTokens: true
+  });
+
+  // Check authentication state
+  const isAuthenticated = await auth0.isAuthenticated();
+  
+  if (isAuthenticated) {
+    // Show logged-in UI
+    const user = await auth0.getUser();
+    document.getElementById('user-profile').innerHTML = `
+      <p>Welcome, ${user.name}!</p>
+      <button id="logout">Log Out</button>
+    `;
+  } else {
+    // Show login button
+    document.getElementById('login-container').innerHTML = `
+      <button id="login">Log In</button>
+    `;
+  }
+
+  // Handle login
+  document.addEventListener('click', async (e) => {
+    if (e.target.id === 'login') {
+      await auth0.loginWithRedirect({
+        redirect_uri: window.location.origin
+      });
+    } else if (e.target.id === 'logout') {
+      auth0.logout({
+        returnTo: window.location.origin
+      });
+    }
+  });
+</script>
+
+<!-- Add these in your navigation -->
+<nav>
+  <div id="login-container">
+    <!-- Login/Logout buttons will be inserted here -->
+  </div>
+  <div id="user-profile">
+    <!-- User info will be inserted here -->
+  </div>
+</nav>
+
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
