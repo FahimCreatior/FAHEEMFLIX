@@ -23,10 +23,7 @@ const CORE_ASSETS = [
   '/icons/apple-touch-icon.png',
   '/icons/favicon.ico',
   '/icons/favicon-16x16.png',
-  '/icons/favicon-32x32.png',
-  // External assets
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap'
+  '/icons/favicon-32x32.png'
 ];
 
 // Install event - cache core assets
@@ -330,4 +327,4 @@ self.addEventListener('activate', event => {
       );
     })
   );
-});
+}) 
