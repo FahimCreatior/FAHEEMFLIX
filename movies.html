@@ -765,6 +765,59 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Continue Watching -->
+        <h2 class="category-title">Continue Watching</h2>
+        <section class="category">
+            <div class="movies-row" id="continue_watching">
+                <!-- Sample Movie Card 1 -->
+                <div class="movie-card" data-id="12345" onclick="showMovieDetails('Stranger Things', 'https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg', '95%', '2022', '3h 12m', 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.', 'Millie Bobby Brown, Finn Wolfhard, Winona Ryder, David Harbour', 'The Duffer Brothers', '1087366972')">
+                    <img src="https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg" alt="Stranger Things" class="movie-poster" loading="lazy">
+                    <div class="movie-info">
+                        <h3 class="movie-title">Stranger Things</h3>
+                        <div class="movie-meta">
+                            <span class="rating">95% Match</span>
+                            <span>2022</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sample Movie Card 2 -->
+                <div class="movie-card" data-id="54321" onclick="showMovieDetails('The Witcher', 'https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg', '89%', '2021', '2h 58m', 'Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.', 'Henry Cavill, Anya Chalotra, Freya Allan, Joey Batey', 'Lauren Schmidt Hissrich', 'ndl1W4ltcmg')">
+                    <img src="https://image.tmdb.org/t/p/w500/z1K2szFtb9hU9J9JcNcwOjE0j9b.jpg" alt="The Witcher" class="movie-poster" loading="lazy">
+                    <div class="movie-info">
+                        <h3 class="movie-title">The Witcher</h3>
+                        <div class="movie-meta">
+                            <span class="rating">89% Match</span>
+                            <span>2021</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 45%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sample Movie Card 3 -->
+                <div class="movie-card" data-id="67890" onclick="showMovieDetails('The Mandalorian', 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', '92%', '2023', '2h 15m', 'After the fall of the Galactic Empire, a lone gunfighter makes his way through the lawless outer reaches of the galaxy.', 'Pedro Pascal, Gina Carano, Carl Weathers, Giancarlo Esposito', 'Jon Favreau', 'eW7TwdAyYWk')">
+                    <img src="https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg" alt="The Mandalorian" class="movie-poster" loading="lazy">
+                    <div class="movie-info">
+                        <h3 class="movie-title">The Mandalorian</h3>
+                        <div class="movie-meta">
+                            <span class="rating">92% Match</span>
+                            <span>2023</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
+        </section>
+        
         <!-- Trending Now -->
         <h2 class="category-title">Trending Now</h2>
         <section class="category">
@@ -814,7 +867,6 @@
             <button class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
             <button class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
         </section>
-        <!-- Continue Watching -->
         <h2 class="category-title">Continue Watching</h2>
         <section class="category">
             <div class="movies-row" id="continue_watching">
