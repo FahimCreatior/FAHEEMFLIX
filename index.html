@@ -11,8 +11,8 @@
 <script>
   // Configure Auth0
   const auth0 = await createAuth0Client({
-    domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",  // e.g., your-tenant.auth0.com
-    client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
+    domain: "YOUR_AUTH0_DOMAIN",  // e.g., your-tenant.auth0.com
+    client_id: "YOUR_CLIENT_ID",
     redirect_uri: window.location.origin,
     cacheLocation: 'localstorage',
     useRefreshTokens: true
@@ -45,6 +45,16 @@
       auth0.logout({
         returnTo: window.location.origin
       });
+    }
+  });
+
+  // Check authentication on page load
+  window.addEventListener('load', async () => {
+    const isAuthenticated = await auth0.isAuthenticated();
+    
+    if (!isAuthenticated && window.location.pathname !== '/') {
+      // Redirect to home page if not authenticated
+      window.location.href = '/';
     }
   });
 </script>
