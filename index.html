@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#e50914">
     <meta name="description" content="Stream your favorite movies and shows on FaheemFlix">
     
-    <!-- Load Auth0 SDK directly -->
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js" crossorigin="anonymous"></script>
+    <!-- Load Auth0 SDK -->
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.2/auth0-spa-js.production.js"></script>
     
     <!-- Simple icon font for basic icons -->
     <style>
@@ -39,6 +39,19 @@
       // Configure and initialize Auth0 client
       const configureClient = async () => {
         try {
+          // Wait for Auth0 SDK to be loaded
+          if (typeof createAuth0Client === 'undefined') {
+            // If not loaded yet, wait for it
+            await new Promise(resolve => {
+              const checkAuth0 = setInterval(() => {
+                if (typeof createAuth0Client !== 'undefined') {
+                  clearInterval(checkAuth0);
+                  resolve();
+                }
+              }, 100);
+            });
+          }
+          
           auth0 = await createAuth0Client({
             domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",
             client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
