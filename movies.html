@@ -1057,5 +1057,160 @@
             }
         }
     </script>
+
+    <!-- Movie Details Page -->
+    <div id="movieDetailsPage" class="movie-details-page">
+        <div class="movie-details-backdrop" id="movieDetailsHeader">
+            <div class="backdrop-overlay"></div>
+            <button class="back-button" onclick="closeMovieDetails()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+        <div class="movie-details-content">
+            <h1 id="movieDetailsTitle">Movie Title</h1>
+            <div class="movie-details-meta" id="movieDetailsMeta">
+                <span>2023</span>
+                <span>PG-13</span>
+                <span>2h 30m</span>
+            </div>
+            <div class="movie-details-buttons">
+                <button class="btn btn-play" onclick="playVideo()">
+                    <i class="fas fa-play"></i> Play Now
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> My List
+                </button>
+            </div>
+            <div class="movie-details-description">
+                <p id="movieDetailsDescription">Movie description goes here.</p>
+            </div>
+            <div class="movie-details-info">
+                <div class="info-row">
+                    <span class="info-label">Starring:</span>
+                    <span class="info-value" id="movieDetailsStarring">Actor 1, Actor 2, Actor 3</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Director:</span>
+                    <span class="info-value" id="movieDetailsDirector">Director Name</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .movie-details-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #141414;
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .movie-details-page.active {
+            display: block;
+        }
+        
+        .movie-details-backdrop {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .backdrop-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to top, #141414 0%, transparent 100%);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .movie-details-content {
+            padding: 20px;
+            margin-top: -100px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .movie-details-meta {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            color: #999;
+        }
+        
+        .movie-details-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-play {
+            background: #e50914;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .movie-details-description {
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        
+        .movie-details-info {
+            margin-top: 20px;
+        }
+        
+        .info-row {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        
+        .info-label {
+            color: #777;
+            min-width: 80px;
+        }
+        
+        .info-value {
+            color: #fff;
+            flex: 1;
+        }
+    </style>
 </body>
 </html>
