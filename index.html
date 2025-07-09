@@ -6,10 +6,6 @@
     <meta name="theme-color" content="#e50914">
     <meta name="description" content="Stream your favorite movies and shows on FaheemFlix">
     
-    <!-- Add Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
     <!-- Simple icon font for basic icons -->
     <style>
       @font-face {
@@ -72,8 +68,8 @@
     </style>
     
     <script>
-      // Firebase configuration
-      const firebaseConfig = {
+      // Make Firebase functions globally available
+      window.firebaseConfig = {
         apiKey: "AIzaSyDbgEJmqKbmAFwSKfqHF7g8ENlAVtqoq3s",
         authDomain: "authentication-faheemflix.firebaseapp.com",
         projectId: "authentication-faheemflix",
@@ -82,122 +78,144 @@
         appId: "1:209153078463:web:c9c79058355d1ae98d020a",
         measurementId: "G-7QT5XZQ89N"
       };
-      
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      
-      // Auth state observer
-      firebase.auth().onAuthStateChanged((user) => {
-        updateUI(user);
-      });
-      
-      // Sign in with Google
-      async function signInWithGoogle() {
+
+      // Wait for Firebase to be loaded
+      document.addEventListener('DOMContentLoaded', function() {
         try {
-          console.log('Initializing Google Sign-In...');
-          const provider = new firebase.auth.GoogleAuthProvider();
-          provider.addScope('profile');
-          provider.addScope('email');
-          
-          console.log('Opening Google Sign-In popup...');
-          const result = await firebase.auth().signInWithPopup(provider);
-          console.log('Sign-in successful:', result);
-          
-          // This gives you a Google Access Token. You can use it to access the Google API.
-          const credential = result.credential;
-          const token = credential?.accessToken;
-          const user = result.user;
-          console.log('User signed in:', user);
-          
-        } catch (error) {
-          console.error('Error details:', {
-            code: error.code,
-            message: error.message,
-            email: error.email,
-            credential: error.credential
-          });
-          
-          let errorMessage = 'Failed to sign in. Please try again.';
-          
-          // Handle specific error cases
-          if (error.code === 'auth/account-exists-with-different-credential') {
-            errorMessage = 'An account already exists with the same email but different sign-in credentials.';
-          } else if (error.code === 'auth/popup-closed-by-user') {
-            errorMessage = 'The sign-in popup was closed before completing the sign-in.';
-          } else if (error.code === 'auth/popup-blocked') {
-            errorMessage = 'The sign-in popup was blocked by your browser. Please allow popups for this site.';
-          } else if (error.code === 'auth/unauthorized-domain') {
-            errorMessage = 'This domain is not authorized for OAuth operations.';
+          // Check if Firebase is loaded
+          if (typeof firebase === 'undefined' || !firebase.apps.length) {
+            throw new Error('Firebase SDK not loaded properly');
           }
           
-          console.error('Sign-in error:', error);
-          alert(errorMessage);
+          // Initialize Firebase
+          firebase.initializeApp(window.firebaseConfig);
+          console.log('Firebase initialized successfully');
+          
+          // Make auth functions globally available
+          window.signInWithGoogle = async function() {
+            try {
+              console.log('Initializing Google Sign-In...');
+              const provider = new firebase.auth.GoogleAuthProvider();
+              provider.addScope('profile');
+              provider.addScope('email');
+              
+              console.log('Opening Google Sign-In popup...');
+              const result = await firebase.auth().signInWithPopup(provider);
+              console.log('Sign-in successful:', result);
+              
+              const credential = result.credential;
+              const token = credential?.accessToken;
+              const user = result.user;
+              console.log('User signed in:', user);
+              
+              // Update UI after successful sign-in
+              updateUI(user);
+              
+            } catch (error) {
+              console.error('Error details:', {
+                code: error.code,
+                message: error.message,
+                email: error.email,
+                credential: error.credential
+              });
+              
+              let errorMessage = 'Failed to sign in. Please try again.';
+              
+              if (error.code === 'auth/account-exists-with-different-credential') {
+                errorMessage = 'An account already exists with the same email but different sign-in credentials.';
+              } else if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = 'The sign-in popup was closed before completing the sign-in.';
+              } else if (error.code === 'auth/popup-blocked') {
+                errorMessage = 'The sign-in popup was blocked by your browser. Please allow popups for this site.';
+              } else if (error.code === 'auth/unauthorized-domain') {
+                errorMessage = 'This domain is not authorized for OAuth operations.';
+              }
+              
+              console.error('Sign-in error:', error);
+              alert(errorMessage);
+            }
+          };
+          
+          // Sign out function
+          window.signOut = function() {
+            firebase.auth().signOut().then(() => {
+              console.log('User signed out successfully');
+              updateUI(null);
+            }).catch((error) => {
+              console.error('Error signing out:', error);
+              alert('Error signing out: ' + error.message);
+            });
+          };
+          
+          // Update UI based on authentication state
+          function updateUI(user) {
+            const loginContainer = document.getElementById('login-container');
+            const userProfile = document.getElementById('user-profile');
+            
+            if (!loginContainer || !userProfile) {
+              console.error('Required elements not found in the DOM');
+              return;
+            }
+            
+            if (user) {
+              // User is signed in
+              userProfile.innerHTML = `
+                <div class="user-profile">
+                  ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName || 'User'}" class="user-avatar">` : ''}
+                  <span>Welcome, ${user.displayName || user.email}</span>
+                  <button onclick="signOut()" class="auth-button">Sign Out</button>
+                </div>
+              `;
+              loginContainer.style.display = 'none';
+              userProfile.style.display = 'flex';
+            } else {
+              // User is signed out
+              loginContainer.innerHTML = `
+                <button onclick="signInWithGoogle()" class="auth-button">
+                  <i class="icon icon-user"></i> Sign In with Google
+                </button>
+              `;
+              loginContainer.style.display = 'block';
+              userProfile.style.display = 'none';
+            }
+          }
+          
+          // Set up auth state listener
+          firebase.auth().onAuthStateChanged((user) => {
+            console.log('Auth state changed:', user ? 'User signed in' : 'User signed out');
+            updateUI(user);
+          });
+          
+          // Initialize the rest of the application
+          initializeApp();
+          
+        } catch (error) {
+          console.error('Firebase initialization error:', error);
+          const errorDiv = document.createElement('div');
+          errorDiv.style.cssText = 'color: white; background: #ff4444; padding: 10px; text-align: center;';
+          errorDiv.textContent = 'Error initializing authentication. Please refresh the page.';
+          document.body.prepend(errorDiv);
         }
-      }
+      });
       
-      // Sign out
-      function signOut() {
-        firebase.auth().signOut().then(() => {
-          // Sign-out successful
-        }).catch((error) => {
-          console.error('Error signing out:', error);
-        });
-      }
-      
-      // Update UI based on authentication state
-      function updateUI(user) {
-        const loginContainer = document.getElementById('login-container');
-        const userProfile = document.getElementById('user-profile');
-        
-        if (user) {
-          // User is signed in
-          userProfile.innerHTML = `
-            <div class="user-profile">
-              ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}" class="user-avatar">` : ''}
-              <span>Welcome, ${user.displayName || user.email}</span>
-              <button onclick="signOut()" class="auth-button">Sign Out</button>
-            </div>
-          `;
-          loginContainer.style.display = 'none';
-          userProfile.style.display = 'flex';
-        } else {
-          // User is signed out
-          loginContainer.innerHTML = `
-            <button onclick="signInWithGoogle()" class="auth-button">
-              <i class="icon icon-user"></i> Sign In with Google
-            </button>
-          `;
-          loginContainer.style.display = 'block';
-          userProfile.style.display = 'none';
-        }
-      }
-
       // Initialize the application
       async function initializeApp() {
         try {
           // Initialize vimeoVideos array if not already defined
           window.vimeoVideos = window.vimeoVideos || [];
           
-          // Initialize movie functionality
-          initializeMovies();
+          // Initialize movie functionality if the function exists
+          if (typeof initializeMovies === 'function') {
+            initializeMovies();
+          }
           
-          // Load featured content
-          loadFeaturedContent();
-          
-          // Set up auth state listener
-          firebase.auth().onAuthStateChanged((user) => {
-            updateUI(user);
-          });
+          // Load featured content if the function exists
+          if (typeof loadFeaturedContent === 'function') {
+            loadFeaturedContent();
+          }
           
         } catch (error) {
           console.error('Error initializing app:', error);
-          // Show error to user
-          const errorDiv = document.createElement('div');
-          errorDiv.style.color = 'white';
-          errorDiv.style.padding = '10px';
-          errorDiv.style.backgroundColor = '#ff4444';
-          errorDiv.textContent = 'Error initializing application. Please refresh the page.';
-          document.body.prepend(errorDiv);
         }
       }
       
@@ -1318,6 +1336,10 @@
             }
         }
     </style>
+    
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 <body>
     <header class="header">
