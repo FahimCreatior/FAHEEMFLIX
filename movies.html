@@ -462,6 +462,128 @@
         .movie-details-footer div {
             text-align: center;
         }
+
+        /* Category Sections */
+        .category-section {
+            margin-bottom: 3rem;
+        }
+
+        .category-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 1rem;
+            padding: 0;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #e50914;
+            border-radius: 2px;
+        }
+
+        /* Movie Cards */
+        .movie-card {
+            position: relative;
+            width: 200px;
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .movie-thumbnail {
+            position: relative;
+            padding-top: 150%;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .movie-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .play-button {
+            opacity: 1;
+        }
+
+        .play-button i {
+            color: white;
+            font-size: 1.5rem;
+            margin-left: 3px;
+        }
+
+        .movie-info {
+            padding: 10px 0;
+        }
+
+        .movie-title {
+            color: white;
+            font-size: 0.9rem;
+            margin: 0 0 5px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-meta {
+            display: flex;
+            gap: 8px;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* Movies Grid */
+        .movies-grid {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 1rem 1rem;
+            gap: 15px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .movies-grid::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
     </style>
 </head>
 <body>
@@ -555,8 +677,70 @@
     </style>
 
     <main class="main-content">
-        <div class="movies-grid">
-            <!-- Card #1 -->
+        <!-- Continue Watching Section -->
+        <section class="category-section">
+            <h2 class="category-title">Continue Watching</h2>
+            <div class="movies-grid continue-watching">
+                <!-- Card #1 -->
+                <div class="movie-card" onclick="showMovieDetails('Thor', 'https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg', 'PG-13', '2010', '2h 28m', 'A powerful but arrogant god Thor is cast out of Asgard to live amongst humans in Midgard.', 'Chris Hemsworth, Natalie Portman', 'Kenneth Branagh', '1099981199')">
+                    <div class="movie-thumbnail">
+                        <img src="https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg" alt="Thor">
+                        <div class="play-button"><i class="fas fa-play"></i></div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">Thor</h3>
+                        <div class="movie-meta">
+                            <span class="movie-rating">PG-13</span>
+                            <span class="movie-year">2023</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card #2 -->
+                <div class="movie-card" onclick="showMovieDetails('Fountain of Youth', 'https://image.tmdb.org/t/p/w500/4iWjGghUj2uyHo2Hyw8NFBvsNGm.jpg', 'PG-13', '2011', '1h 55m', 'A mystical adventure in search of eternal life and the legendary Fountain of Youth.', 'Emily Blunt, Chris Pine', 'James Cameron', '367043603')">
+                    <div class="movie-thumbnail">
+                        <img src="https://image.tmdb.org/t/p/w500/4iWjGghUj2uyHo2Hyw8NFBvsNGm.jpg" alt="Fountain of Youth">
+                        <div class="play-button"><i class="fas fa-play"></i></div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">Fountain of Youth</h3>
+                        <div class="movie-meta">
+                            <span class="movie-rating">PG-13</span>
+                            <span class="movie-year">2023</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card #3 -->
+                <div class="movie-card" onclick="showMovieDetails('Interceptor', 'https://image.tmdb.org/t/p/w500/jBKNAfANo4e3rzJtb7aHfYNd7b3.jpg', 'PG-13', '2022', '1h 38m', 'A lone army captain must use her years of tactical training to save humanity from an imminent threat.', 'Elsa Pataky, Luke Bracey', 'Matthew Reilly', '701600914')">
+                    <div class="movie-thumbnail">
+                        <img src="https://image.tmdb.org/t/p/w500/jBKNAfANo4e3rzJtb7aHfYNd7b3.jpg" alt="Interceptor">
+                        <div class="play-button"><i class="fas fa-play"></i></div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">Interceptor</h3>
+                        <div class="movie-meta">
+                            <span class="movie-rating">PG-13</span>
+                            <span class="movie-year">2023</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Movies Section -->
+        <section class="category-section">
+            <h2 class="category-title">Popular on FAHEEMFLIX</h2>
+            <div class="movies-grid">
             <div class="movie-card" onclick="showMovieDetails('Thor', 'https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg', 'PG-13', '2010', '2h 28m', 'A powerful but arrogant god Thor is cast out of Asgard to live amongst humans in Midgard.', 'Chris Hemsworth, Natalie Portman', 'Kenneth Branagh', '1099981199')">
                 <div class="movie-thumbnail">
                     <img src="https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg" alt="Thor">
