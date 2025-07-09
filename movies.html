@@ -6,7 +6,6 @@
     <title>FAHEEMZFLIX - Movies</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-    <link href="css/vimeo-player.css" rel="stylesheet">
     <script src="https://player.vimeo.com/api/player.js"></script>
     <style>
         /* Search Modal Styles */
@@ -500,9 +499,7 @@
         <div class="video-back-arrow" onclick="closeVideoPlayer()">
             <i class="fas fa-arrow-left"></i>
         </div>
-        <div id="vimeoPlayerWrapper">
-            <!-- Vimeo iframe will be inserted here by JavaScript -->
-        </div>
+        <div id="vimeoPlayerWrapper"></div>
     </div>
 
     <style>
@@ -761,18 +758,15 @@
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
-            // Prevent scrolling on the body
-            document.body.style.overflow = 'hidden';
-            
             // Create new iframe for the video programmatically
             const iframe = document.createElement('iframe');
             iframe.id = 'vimeoPlayer';
             iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&controls=1&playsinline=0&transparent=0&background=0&dnt=1`;
-            iframe.setAttribute('frameborder', '0');
-            iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-            iframe.setAttribute('allowfullscreen', '');  // Add this line for better cross-browser support
-            iframe.setAttribute('webkitallowfullscreen', '');  // For Safari
-            iframe.setAttribute('mozallowfullscreen', '');    // For Firefox
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.frameBorder = '0';
+            iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+            iframe.allowFullscreen = true;
             iframe.referrerPolicy = 'origin';
             iframe.title = 'Vimeo video player';
             
@@ -780,45 +774,21 @@
             playerWrapper.innerHTML = '';
             playerWrapper.appendChild(iframe);
             
-            // Show the player container
             playerContainer.style.display = 'block';
-            
-            // Force a reflow to ensure styles are applied
-            void playerContainer.offsetHeight;
 
             // Request fullscreen mode
-            const requestFullscreen = playerContainer.requestFullscreen || 
-                                    playerContainer.webkitRequestFullscreen || 
-                                    playerContainer.msRequestFullscreen;
-            
-            if (requestFullscreen) {
-                requestFullscreen.call(playerContainer).catch(err => {
-                    console.error('Error attempting to enable fullscreen:', err);
-                });
+            if (playerContainer.requestFullscreen) {
+                playerContainer.requestFullscreen();
+            } else if (playerContainer.webkitRequestFullscreen) { // Safari
+                playerContainer.webkitRequestFullscreen();
+            } else if (playerContainer.msRequestFullscreen) { // IE11
+                playerContainer.msRequestFullscreen();
             }
 
-            // Try to lock screen orientation to landscape
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(error => {
-                    console.log('Screen orientation lock not supported:', error);
-                });
-            }
-            
-            // Add event listener for fullscreen change
-            document.addEventListener('fullscreenchange', handleFullscreenChange);
-            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-            
-            function handleFullscreenChange() {
-                if (!document.fullscreenElement && 
-                    !document.webkitIsFullScreen && 
-                    !document.mozFullScreen && 
-                    !document.msFullscreenElement) {
-                    // If exited fullscreen, close the player
-                    closeVideoPlayer();
-                }
-            }
+            // Rotate the screen to landscape mode
+            screen.orientation.lock('landscape').catch((error) => {
+                console.error('Screen orientation lock failed:', error);
+            });
         }
 
         // Close the movie details page when the back button is pressed
