@@ -606,52 +606,95 @@
 </head>
 <body>
     <script>
-        // Configure Auth0
-        const auth0 = await createAuth0Client({
-            domain: "YOUR_AUTH0_DOMAIN",  // e.g., your-tenant.auth0.com
-            client_id: "YOUR_CLIENT_ID",
-            redirect_uri: window.location.origin,
-            cacheLocation: 'localstorage',
-            useRefreshTokens: true
+      // Initialize Auth0 client
+      let auth0 = null;
+      
+      // Configure and initialize Auth0 client
+      const configureClient = async () => {
+        auth0 = await createAuth0Client({
+          domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",
+          client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
+          redirect_uri: window.location.origin,
+          cacheLocation: 'localstorage',
+          useRefreshTokens: true
         });
+      };
 
-        // Check authentication on page load
-        window.addEventListener('load', async () => {
-            const isAuthenticated = await auth0.isAuthenticated();
-            
-            if (!isAuthenticated) {
-                // Redirect to home page if not authenticated
-                window.location.href = '/';
-                return;
-            }
-
-            // Show user profile if authenticated
-            const user = await auth0.getUser();
-            const userProfile = document.createElement('div');
-            userProfile.className = 'user-profile';
-            userProfile.style.display = 'flex';
-            userProfile.style.alignItems = 'center';
-            userProfile.style.gap = '10px';
-            userProfile.style.marginLeft = 'auto';
-            userProfile.style.paddingRight = '20px';
-            userProfile.innerHTML = `
-                <span style="color: #e5e5e5;">${user.name}</span>
-                <button id="logout" style="background: #e50914; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">Logout</button>
-            `;
-            
-            // Add user profile to header
-            const header = document.querySelector('.header');
-            if (header) {
-                header.appendChild(userProfile);
-            }
-
-            // Handle logout
-            document.getElementById('logout').addEventListener('click', () => {
-                auth0.logout({
-                    returnTo: window.location.origin
-                });
-            });
+      // Handle login
+      const login = async () => {
+        await auth0.loginWithRedirect({
+          redirect_uri: window.location.origin
         });
+      };
+
+      // Handle logout
+      const logout = () => {
+        auth0.logout({
+          returnTo: window.location.origin
+        });
+      };
+
+      // Update UI based on authentication state
+      const updateUI = async () => {
+        const isAuthenticated = await auth0.isAuthenticated();
+        
+        if (!isAuthenticated) {
+          // Redirect to home page if not authenticated
+          window.location.href = '/';
+          return;
+        }
+
+        // User is authenticated - show user info
+        const user = await auth0.getUser();
+        const userProfile = document.createElement('div');
+        userProfile.className = 'user-profile';
+        userProfile.style.display = 'flex';
+        userProfile.style.alignItems = 'center';
+        userProfile.style.gap = '10px';
+        userProfile.style.marginLeft = 'auto';
+        userProfile.style.paddingRight = '20px';
+        userProfile.innerHTML = `
+          <span style="color: #e5e5e5;">${user.name || user.email}</span>
+          <button id="logout" style="background: #e50914; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+            Logout
+          </button>
+        `;
+        
+        // Add user profile to header
+        const header = document.querySelector('.header');
+        if (header) {
+          // Remove existing profile if it exists
+          const existingProfile = header.querySelector('.user-profile');
+          if (existingProfile) {
+            existingProfile.remove();
+          }
+          header.appendChild(userProfile);
+        }
+
+        // Add logout event listener
+        document.getElementById('logout').addEventListener('click', logout);
+      };
+
+      // Initialize the application
+      const init = async () => {
+        await configureClient();
+        
+        // Check for the code and state parameters from Auth0
+        const query = window.location.search;
+        if (query.includes('code=') && query.includes('state=')) {
+          // Process the login state
+          await auth0.handleRedirectCallback();
+          
+          // Remove the query parameters
+          window.history.replaceState({}, document.title, "/movies.html");
+        }
+        
+        // Update UI
+        await updateUI();
+      };
+
+      // Initialize when the page loads
+      window.addEventListener('load', init);
     </script>
 
     <header class="header">
