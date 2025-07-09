@@ -1640,19 +1640,34 @@
             });
         }
 
+        // Get player elements
+        const playerModal = document.getElementById('playerModal');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const closePlayer = document.getElementById('closePlayer');
+
         // Play movie
         function playMovie(movie) {
-            videoPlayer.src = movie.videoUrl;
-            playerModal.style.display = 'block';
-            videoPlayer.play();
+            if (movie && movie.videoUrl) {
+                videoPlayer.src = movie.videoUrl;
+                playerModal.style.display = 'block';
+                videoPlayer.play().catch(error => {
+                    console.error('Error playing video:', error);
+                });
+            } else {
+                console.error('Invalid movie data or missing video URL');
+            }
         }
 
         // Close player
-        closePlayer.addEventListener('click', () => {
-            playerModal.style.display = 'none';
-            videoPlayer.pause();
-            videoPlayer.src = '';
-        });
+        if (closePlayer) {
+            closePlayer.addEventListener('click', () => {
+                if (playerModal) playerModal.style.display = 'none';
+                if (videoPlayer) {
+                    videoPlayer.pause();
+                    videoPlayer.src = '';
+                }
+            });
+        }
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
