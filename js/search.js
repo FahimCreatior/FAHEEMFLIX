@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     vimeoId: 'default_video_id'
                 };
                 
-                // Show movie details
+                // Show movie details with fromSearch flag set to true
                 showMovieDetails(
                     movieData.title,
                     movieData.poster,
@@ -124,7 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     movieData.overview,
                     movieData.cast,
                     movieData.director,
-                    movieData.vimeoId
+                    movieData.vimeoId,
+                    true  // This is from search
                 );
                 
                 // Close the search modal
@@ -159,8 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Make showMovieDetails available globally
-function showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId) {
-    console.log('Showing movie details:', { title, poster, vimeoId });
+function showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId, fromSearch = false) {
+    console.log('Showing movie details:', { title, poster, vimeoId, fromSearch });
     
     // Ensure the movie details elements exist
     const page = document.getElementById('movieDetailsPage');
@@ -170,8 +171,9 @@ function showMovieDetails(title, poster, rating, year, duration, description, ca
     const descEl = document.getElementById('movieDetailsDescription');
     const castEl = document.getElementById('movieDetailsStarring');
     const directorEl = document.getElementById('movieDetailsDirector');
+    const playButtonContainer = document.querySelector('.movie-details-buttons');
     
-    if (!page || !header || !titleEl || !metaEl || !descEl || !castEl || !directorEl) {
+    if (!page || !header || !titleEl || !metaEl || !descEl || !castEl || !directorEl || !playButtonContainer) {
         console.error('Missing required elements in the DOM');
         return;
     }
@@ -190,6 +192,13 @@ function showMovieDetails(title, poster, rating, year, duration, description, ca
         descEl.textContent = description || 'No description available';
         castEl.textContent = cast || 'N/A';
         directorEl.textContent = director || 'N/A';
+        
+        // Show/hide play button based on whether this is from search
+        if (fromSearch) {
+            playButtonContainer.style.display = 'none';
+        } else {
+            playButtonContainer.style.display = 'block';
+        }
         
         // Show the details page
         page.classList.add('active');
