@@ -28,178 +28,11 @@
       .icon-download:before { content: '↓'; }
       .icon-search:before { content: '🔍'; }
       .icon-user:before { content: '👤'; }
-      .icon-logout:before { content: '🚪'; }
-      
-      /* Auth styles */
-      .auth-container {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-      }
-      
-      .auth-button {
-        background: #e50914;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        transition: background 0.3s ease;
-      }
-      
-      .auth-button:hover {
-        background: #f40612;
-      }
-      
-      .user-profile {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      
-      .user-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
     </style>
     
     <script>
-      // Make Firebase functions globally available
-      window.firebaseConfig = {
-        apiKey: "AIzaSyDbgEJmqKbmAFwSKfqHF7g8ENlAVtqoq3s",
-        authDomain: "authentication-faheemflix.firebaseapp.com",
-        projectId: "authentication-faheemflix",
-        storageBucket: "authentication-faheemflix.appspot.com",
-        messagingSenderId: "209153078463",
-        appId: "1:209153078463:web:c9c79058355d1ae98d020a",
-        measurementId: "G-7QT5XZQ89N"
-      };
-
-      // Wait for Firebase to be loaded
-      document.addEventListener('DOMContentLoaded', function() {
-        try {
-          // Check if Firebase is loaded
-          if (typeof firebase === 'undefined' || !firebase.apps.length) {
-            throw new Error('Firebase SDK not loaded properly');
-          }
-          
-          // Initialize Firebase
-          firebase.initializeApp(window.firebaseConfig);
-          console.log('Firebase initialized successfully');
-          
-          // Make auth functions globally available
-          window.signInWithGoogle = async function() {
-            try {
-              console.log('Initializing Google Sign-In...');
-              const provider = new firebase.auth.GoogleAuthProvider();
-              provider.addScope('profile');
-              provider.addScope('email');
-              
-              console.log('Opening Google Sign-In popup...');
-              const result = await firebase.auth().signInWithPopup(provider);
-              console.log('Sign-in successful:', result);
-              
-              const credential = result.credential;
-              const token = credential?.accessToken;
-              const user = result.user;
-              console.log('User signed in:', user);
-              
-              // Update UI after successful sign-in
-              updateUI(user);
-              
-            } catch (error) {
-              console.error('Error details:', {
-                code: error.code,
-                message: error.message,
-                email: error.email,
-                credential: error.credential
-              });
-              
-              let errorMessage = 'Failed to sign in. Please try again.';
-              
-              if (error.code === 'auth/account-exists-with-different-credential') {
-                errorMessage = 'An account already exists with the same email but different sign-in credentials.';
-              } else if (error.code === 'auth/popup-closed-by-user') {
-                errorMessage = 'The sign-in popup was closed before completing the sign-in.';
-              } else if (error.code === 'auth/popup-blocked') {
-                errorMessage = 'The sign-in popup was blocked by your browser. Please allow popups for this site.';
-              } else if (error.code === 'auth/unauthorized-domain') {
-                errorMessage = 'This domain is not authorized for OAuth operations.';
-              }
-              
-              console.error('Sign-in error:', error);
-              alert(errorMessage);
-            }
-          };
-          
-          // Sign out function
-          window.signOut = function() {
-            firebase.auth().signOut().then(() => {
-              console.log('User signed out successfully');
-              updateUI(null);
-            }).catch((error) => {
-              console.error('Error signing out:', error);
-              alert('Error signing out: ' + error.message);
-            });
-          };
-          
-          // Update UI based on authentication state
-          function updateUI(user) {
-            const loginContainer = document.getElementById('login-container');
-            const userProfile = document.getElementById('user-profile');
-            
-            if (!loginContainer || !userProfile) {
-              console.error('Required elements not found in the DOM');
-              return;
-            }
-            
-            if (user) {
-              // User is signed in
-              userProfile.innerHTML = `
-                <div class="user-profile">
-                  ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName || 'User'}" class="user-avatar">` : ''}
-                  <span>Welcome, ${user.displayName || user.email}</span>
-                  <button onclick="signOut()" class="auth-button">Sign Out</button>
-                </div>
-              `;
-              loginContainer.style.display = 'none';
-              userProfile.style.display = 'flex';
-            } else {
-              // User is signed out
-              loginContainer.innerHTML = `
-                <button onclick="signInWithGoogle()" class="auth-button">
-                  <i class="icon icon-user"></i> Sign In with Google
-                </button>
-              `;
-              loginContainer.style.display = 'block';
-              userProfile.style.display = 'none';
-            }
-          }
-          
-          // Set up auth state listener
-          firebase.auth().onAuthStateChanged((user) => {
-            console.log('Auth state changed:', user ? 'User signed in' : 'User signed out');
-            updateUI(user);
-          });
-          
-          // Initialize the rest of the application
-          initializeApp();
-          
-        } catch (error) {
-          console.error('Firebase initialization error:', error);
-          const errorDiv = document.createElement('div');
-          errorDiv.style.cssText = 'color: white; background: #ff4444; padding: 10px; text-align: center;';
-          errorDiv.textContent = 'Error initializing authentication. Please refresh the page.';
-          document.body.prepend(errorDiv);
-        }
-      });
-      
       // Initialize the application
-      async function initializeApp() {
+      document.addEventListener('DOMContentLoaded', function() {
         try {
           // Initialize vimeoVideos array if not already defined
           window.vimeoVideos = window.vimeoVideos || [];
@@ -217,7 +50,7 @@
         } catch (error) {
           console.error('Error initializing app:', error);
         }
-      }
+      });
       
       // Initialize when the page loads
       document.addEventListener('DOMContentLoaded', () => {
@@ -1337,17 +1170,15 @@
         }
     </style>
     
-    <!-- Add Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
 </head>
 <body>
     <header class="header">
         <div class="header-content">
             <div class="logo">FaheemFlix</div>
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link active">Home</a>
-                <a href="movies.html" class="nav-link">Movies</a>
+            <nav class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="movies.html">Movies</a>
                 <a href="#" class="nav-link">TV Shows</a>
                 <a href="#" class="nav-link">My List</a>
             </nav>
@@ -1355,12 +1186,6 @@
                 <input type="text" id="searchInput" placeholder="Search movies...">
                 <button id="searchButton">Search</button>
             </div>
-            <div id="login-container">
-                <button onclick="signInWithGoogle()" class="auth-button">
-                    <i class="icon icon-user"></i> Sign In with Google
-                </button>
-            </div>
-            <div id="user-profile" style="display: none; margin-left: 15px;">
                 <!-- User profile will be shown here -->
             </div>
         </div>
