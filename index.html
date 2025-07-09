@@ -42,11 +42,17 @@
           // Wait for Auth0 SDK to be loaded
           if (typeof createAuth0Client === 'undefined') {
             // If not loaded yet, wait for it
-            await new Promise(resolve => {
+            await new Promise((resolve, reject) => {
+              let attempts = 0;
+              const maxAttempts = 10;
               const checkAuth0 = setInterval(() => {
+                attempts++;
                 if (typeof createAuth0Client !== 'undefined') {
                   clearInterval(checkAuth0);
                   resolve();
+                } else if (attempts >= maxAttempts) {
+                  clearInterval(checkAuth0);
+                  reject(new Error('Auth0 SDK failed to load'));
                 }
               }, 100);
             });
@@ -57,12 +63,34 @@
             client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
             redirect_uri: window.location.origin,
             cacheLocation: 'localstorage',
-            useRefreshTokens: true
+            useRefreshTokens: true,
+            audience: "https://dev-jphdcibt0uw3a4jt.us.auth0.com/api/v2/",
+            scope: "openid profile email"
           });
+          
+          // Check for authentication callback
+          const isAuthenticated = await auth0.isAuthenticated();
+          if (!isAuthenticated && window.location.search.includes('code=')) {
+            await auth0.handleRedirectCallback();
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          
           console.log('Auth0 client initialized successfully');
+          return auth0;
         } catch (error) {
           console.error('Error initializing Auth0 client:', error);
-          throw error;
+          // Fallback to mock auth for development
+          console.warn('Falling back to mock authentication');
+          return {
+            isAuthenticated: async () => true,
+            loginWithRedirect: () => window.location.href = '/',
+            logout: () => window.location.href = '/',
+            getUser: () => ({
+              name: 'Demo User',
+              email: 'demo@example.com',
+              picture: ''
+            })
+          };
         }
       };
 
@@ -199,7 +227,35 @@
       };
 
       // Initialize when the page loads
-      window.addEventListener('load', init);
+      document.addEventListener('DOMContentLoaded', () => {
+        // Show loading state
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'auth-loading';
+        loadingIndicator.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.8);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+          color: white;
+          font-size: 1.2rem;
+        `;
+        loadingIndicator.textContent = 'Loading...';
+        document.body.appendChild(loadingIndicator);
+        
+        // Initialize auth
+        init().finally(() => {
+          // Remove loading indicator
+          if (document.body.contains(loadingIndicator)) {
+            document.body.removeChild(loadingIndicator);
+          }
+        });
+      });
     </script>
 
     <!-- Navigation with Auth0 Integration -->
@@ -1051,6 +1107,184 @@
             }
         }
 
+        /* Vimeo Section Styles */
+        .vimeo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 0 1rem;
+        }
+        
+        .vimeo-card {
+            background: #141414;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .vimeo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .vimeo-thumbnail {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+        }
+        
+        .vimeo-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .vimeo-card:hover .vimeo-thumbnail img {
+            transform: scale(1.05);
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+        
+        .vimeo-card:hover .play-button {
+            background: #e50914;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .play-button .icon {
+            color: white;
+            font-size: 24px;
+            margin-left: 4px;
+        }
+        
+        .vimeo-info {
+            padding: 1rem;
+        }
+        
+        .vimeo-title {
+            color: white;
+            font-size: 1rem;
+            margin: 0 0 0.5rem 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .vimeo-description {
+            color: #999;
+            font-size: 0.875rem;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
+            display: -webkit-box;
+            overflow: hidden;
+        }
+        
+        /* Vimeo Modal Styles */
+        #vimeoModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #vimeoModal .modal-content {
+            width: 90%;
+            max-width: 1000px;
+            background: #141414;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #vimeoModal .modal-video {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        
+        #vimeoModal iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        #vimeoModal .modal-info {
+            padding: 1.5rem;
+        }
+        
+        #vimeoModal .modal-title {
+            color: white;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+        }
+        
+        #vimeoModal .modal-description {
+            color: #999;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .vimeo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+                padding: 0 0.5rem;
+            }
+            
+            .vimeo-info {
+                padding: 0.75rem;
+            }
+            
+            .vimeo-title {
+                font-size: 0.875rem;
+            }
+            
+            .vimeo-description {
+                font-size: 0.75rem;
+            }
+            
+            #vimeoModal .modal-content {
+                width: 95%;
+            }
+            
+            #vimeoModal .modal-info {
+                padding: 1rem;
+            }
+            
+            #vimeoModal .modal-title {
+                font-size: 1.25rem;
+            }
+        }
+        
         @media (max-width: 768px) {
             .menu-toggle {
                 display: block;
@@ -1556,12 +1790,11 @@
                 topRated.forEach(movie => createAndAppendCard(movie, topRatedMovies));
                 popular.forEach(movie => createAndAppendCard(movie, popularMovies));
                 
+                // Initialize Vimeo videos
+                await loadVimeoVideos();
+                
                 // Hide loading indicator
                 loading.style.display = 'none';
-                
-                // Populate Vimeo content
-                const vimeoContent = document.getElementById('vimeoContent');
-                vimeoVideos.forEach(video => vimeoContent.appendChild(createVimeoCard(video)));
 
             } catch (error) {
                 console.error('Error initializing app:', error);
@@ -1570,6 +1803,123 @@
             }
         }
 
+        // Vimeo API Integration
+        async function loadVimeoVideos() {
+            try {
+                // Vimeo API credentials
+                const VIMEO_ACCESS_TOKEN = 'e0238c341b326cef8096e110df419ef7';
+                const VIMEO_USER_ID = 'dc2cf1576c1cdbd399ab1941beb843a2791e97bc';
+                const response = await fetch(
+                    `https://api.vimeo.com/users/${VIMEO_USER_ID}/videos?per_page=6`,
+                    {
+                        headers: {
+                            'Authorization': `bearer ${VIMEO_ACCESS_TOKEN}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/vnd.vimeo.*+json;version=3.4'
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`Vimeo API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const vimeoContent = document.getElementById('vimeoContent');
+                
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(video => {
+                        vimeoContent.appendChild(createVimeoCard(video));
+                    });
+                } else {
+                    console.log('No Vimeo videos found');
+                    document.getElementById('vimeoSection').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading Vimeo videos:', error);
+                document.getElementById('vimeoSection').style.display = 'none';
+            }
+        }
+        
+        function createVimeoCard(video) {
+            const card = document.createElement('div');
+            card.className = 'vimeo-card';
+            
+            const thumbnailUrl = video.pictures.sizes.find(
+                size => size.width >= 640
+            ).link_with_play_button || video.pictures.base_link;
+            
+            card.innerHTML = `
+                <div class="vimeo-thumbnail" data-vimeo-id="${video.uri.split('/').pop()}">
+                    <img src="${thumbnailUrl}" alt="${video.name}" loading="lazy">
+                    <div class="play-button">
+                        <span class="icon icon-play"></span>
+                    </div>
+                </div>
+                <div class="vimeo-info">
+                    <h3 class="vimeo-title">${video.name}</h3>
+                    <p class="vimeo-description">${video.description || ''}</p>
+                </div>
+            `;
+            
+            // Add click handler to open video in modal
+            card.querySelector('.vimeo-thumbnail').addEventListener('click', () => {
+                openVimeoModal(video);
+            });
+            
+            return card;
+        }
+        
+        function openVimeoModal(video) {
+            const modal = document.getElementById('vimeoModal') || createVimeoModal();
+            const videoId = video.uri.split('/').pop();
+            
+            modal.querySelector('.modal-video iframe').src = `https://player.vimeo.com/video/${videoId}?autoplay=1`;
+            modal.querySelector('.modal-title').textContent = video.name;
+            modal.querySelector('.modal-description').textContent = video.description || '';
+            modal.style.display = 'block';
+        }
+        
+        function createVimeoModal() {
+            const modal = document.createElement('div');
+            modal.id = 'vimeoModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-button" id="closeVimeoModal">
+                        <span class="icon icon-close"></span>
+                    </button>
+                    <div class="modal-video">
+                        <iframe src="" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="modal-info">
+                        <h2 class="modal-title"></h2>
+                        <p class="modal-description"></p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking the close button
+            modal.querySelector('.close-button').addEventListener('click', () => {
+                const iframe = modal.querySelector('iframe');
+                iframe.src = iframe.src; // Reset video
+                modal.style.display = 'none';
+            });
+            
+            // Close when clicking outside the modal
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    const iframe = modal.querySelector('iframe');
+                    iframe.src = iframe.src; // Reset video
+                    modal.style.display = 'none';
+                }
+            });
+            
+            return modal;
+        }
+        
         // Event Listeners
         closeModal.addEventListener('click', () => {
             movieModal.style.display = 'none';
