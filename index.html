@@ -6,31 +6,61 @@
     <meta name="theme-color" content="#e50914">
     <meta name="description" content="Stream your favorite movies and shows on FaheemFlix">
     
-    <!-- Add Auth0 SPA SDK -->
-    <script>
+    <!-- Generate a nonce for CSP -->
+    <script nonce="auth0-script">
+      // Generate a nonce for script loading
+      const cspNonce = 'auth0-script-' + Math.random().toString(36).substring(2, 15);
+      document.currentScript.setAttribute('nonce', cspNonce);
+      
+      // Update the CSP meta tag with the nonce
+      const updateCSP = () => {
+        const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (cspMeta) {
+          let csp = cspMeta.content;
+          csp = csp.replace(/script-src[^;]+/, `script-src 'self' 'nonce-${cspNonce}' 'strict-dynamic' https: 'unsafe-inline'`);
+          csp = csp.replace(/script-src-elem[^;]+/, `script-src-elem 'self' 'nonce-${cspNonce}' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com`);
+          cspMeta.content = csp;
+        }
+      };
+      
+      updateCSP();
+    </script>
+    
+    <!-- Add Auth0 SPA SDK with CSP-compliant loading -->
+    <script nonce="auth0-script">
       // Initialize Auth0 client
       let auth0 = null;
       
-      // Load Auth0 script dynamically
+      // Load Auth0 script with nonce
       const loadAuth0 = () => {
         return new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = 'https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js';
+          script.integrity = 'sha384-...'; // Add integrity hash if available
+          script.crossOrigin = 'anonymous';
           script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Failed to load Auth0 SDK'));
+          script.onerror = (error) => {
+            console.error('Failed to load Auth0 SDK:', error);
+            reject(new Error('Failed to load Auth0 SDK'));
+          };
           document.head.appendChild(script);
         });
       };
       
       // Configure and initialize Auth0 client
       const configureClient = async () => {
-        auth0 = await createAuth0Client({
-          domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",
-          client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
-          redirect_uri: window.location.origin,
-          cacheLocation: 'localstorage',
-          useRefreshTokens: true
-        });
+        try {
+          auth0 = await createAuth0Client({
+            domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",
+            client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
+            redirect_uri: window.location.origin,
+            cacheLocation: 'localstorage',
+            useRefreshTokens: true
+          });
+        } catch (error) {
+          console.error('Error initializing Auth0 client:', error);
+          throw error;
+        }
       };
 
       // Handle login
@@ -148,8 +178,8 @@
     
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com;
-      script-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com;
+      script-src 'self' 'nonce-auth0-script' 'strict-dynamic' https: 'unsafe-inline' 'unsafe-eval';
+      script-src-elem 'self' 'nonce-auth0-script' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com;
       style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://kit.fontawesome.com;
       style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://kit.fontawesome.com;
       img-src 'self' data: https:;
