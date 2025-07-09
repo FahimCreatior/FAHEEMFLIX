@@ -7,6 +7,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://player.vimeo.com/api/player.js"></script>
+    <!-- TMDB API Integration -->
+    <script src="js/tmdb.js"></script>
     <style>
         /* Search Modal Styles */
         .search-modal {
@@ -788,7 +790,12 @@
                 </div>
             </div>
         </div>
-    </main>
+    </section>
+
+    <!-- Dynamic TMDB Categories -->
+    <section id="tmdb-categories">
+        <!-- Categories will be populated by JavaScript -->
+    </section>
 
     <!-- Movie Details Page -->
     <div class="movie-details-page" id="movieDetailsPage">
@@ -883,7 +890,7 @@
     <script src="./js/search.js"></script>
 
     <script>
-        function showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId) {
+        function showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId = '') {
             const page = document.getElementById('movieDetailsPage');
             document.getElementById('movieDetailsHeader').style.backgroundImage = `url(${poster})`;
             document.getElementById('movieDetailsTitle').textContent = title;
@@ -895,9 +902,23 @@
             document.getElementById('movieDetailsDescription').textContent = description;
             document.getElementById('movieDetailsStarring').textContent = cast;
             document.getElementById('movieDetailsDirector').textContent = director;
+            
+            // Update play button based on whether we have a Vimeo ID
+            const playButton = document.querySelector('.movie-details-buttons .btn-play');
+            if (vimeoId) {
+                playButton.style.display = 'flex';
+                playButton.onclick = (e) => {
+                    e.stopPropagation();
+                    playVideo();
+                };
+                // Store the Vimeo ID for the current movie
+                page.dataset.vimeoId = vimeoId;
+            } else {
+                playButton.style.display = 'none';
+                delete page.dataset.vimeoId;
+            }
+            
             page.classList.add('active');
-            // Store the Vimeo ID for the current movie
-            page.dataset.vimeoId = vimeoId;
         }
 
         function closeVideoPlayer() {
@@ -1016,25 +1037,4 @@
                 if (document.fullscreenElement) {
                     document.exitFullscreen().catch(err => console.error(err));
                 } else if (document.webkitFullscreenElement) {
-                    document.webkitExitFullscreen().catch(err => console.error(err));
-                } else if (document.msFullscreenElement) {
-                    document.msExitFullscreen().catch(err => console.error(err));
-                }
-                
-                // Unlock screen orientation
-                if (screen.orientation && screen.orientation.unlock) {
-                    screen.orientation.unlock();
-                }
-                
-                // Re-enable scrolling
-                document.body.style.overflow = '';
-                
-                // Remove any URL fragments that might be causing issues
-                if (window.location.hash) {
-                    history.pushState('', document.title, window.location.pathname + window.location.search);
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+       
