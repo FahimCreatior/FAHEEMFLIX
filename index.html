@@ -149,6 +149,7 @@
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com;
+      script-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com;
       style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
       img-src 'self' data: https:;
       font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:;
@@ -1884,29 +1885,10 @@
         }
     </style>
     <!-- Add this script to your index.html before the closing </body> tag -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-    const SUPABASE_URL = 'https://mhmlywpwgciwiwbwsddf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1obWx5d3B3Z2Npd2l3YndzZGRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNzQwOTIsImV4cCI6MjA2NDk1MDA5Mn0.FRn-T36IhmD-Igc3eOxkJY3wlS6baqZbllcVw-EEO0U';
-    
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Check auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!session) {
-            // Redirect to login if not authenticated
-            window.location.href = 'login.html';
-        }
-    });
-    
-    // Add logout functionality
-    async function signOut() {
-        const { error } = await supabase.auth.signOut();
-        if (!error) {
-            window.location.href = 'login.html';
-        }
-    }
-    
+    // Auth0 handles authentication
+    // No need for Supabase client initialization here
     // Add this to your navigation menu
     // <button onclick="signOut()">Sign Out</button>
 </script>
