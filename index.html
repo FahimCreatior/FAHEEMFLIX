@@ -6,68 +6,107 @@
     <meta name="theme-color" content="#e50914">
     <meta name="description" content="Stream your favorite movies and shows on FaheemFlix">
     
-    <!-- Add these in the head section -->
-<script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
-<script>
-  // Configure Auth0
-  const auth0 = await createAuth0Client({
-    domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",  // e.g., your-tenant.auth0.com
-    client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
-    redirect_uri: window.location.origin,
-    cacheLocation: 'localstorage',
-    useRefreshTokens: true
-  });
+    <!-- Add Auth0 SPA SDK -->
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+    <script>
+      // Initialize Auth0 client
+      let auth0 = null;
+      
+      // Configure and initialize Auth0 client
+      const configureClient = async () => {
+        auth0 = await createAuth0Client({
+          domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",
+          client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
+          redirect_uri: window.location.origin,
+          cacheLocation: 'localstorage',
+          useRefreshTokens: true
+        });
+      };
 
-  // Check authentication state
-  const isAuthenticated = await auth0.isAuthenticated();
-  
-  if (isAuthenticated) {
-    // Show logged-in UI
-    const user = await auth0.getUser();
-    document.getElementById('user-profile').innerHTML = `
-      <p>Welcome, ${user.name}!</p>
-      <button id="logout">Log Out</button>
-    `;
-  } else {
-    // Show login button
-    document.getElementById('login-container').innerHTML = `
-      <button id="login">Log In</button>
-    `;
-  }
+      // Handle login
+      const login = async () => {
+        await auth0.loginWithRedirect({
+          redirect_uri: window.location.origin
+        });
+      };
 
-  // Handle login
-  document.addEventListener('click', async (e) => {
-    if (e.target.id === 'login') {
-      await auth0.loginWithRedirect({
-        redirect_uri: window.location.origin
-      });
-    } else if (e.target.id === 'logout') {
-      auth0.logout({
-        returnTo: window.location.origin
-      });
-    }
-  });
+      // Handle logout
+      const logout = () => {
+        auth0.logout({
+          returnTo: window.location.origin
+        });
+      };
 
-  // Check authentication on page load
-  window.addEventListener('load', async () => {
-    const isAuthenticated = await auth0.isAuthenticated();
-    
-    if (!isAuthenticated && window.location.pathname !== '/') {
-      // Redirect to home page if not authenticated
-      window.location.href = '/';
-    }
-  });
-</script>
+      // Update UI based on authentication state
+      const updateUI = async () => {
+        const isAuthenticated = await auth0.isAuthenticated();
+        const loginContainer = document.getElementById('login-container');
+        const userProfile = document.getElementById('user-profile');
+        
+        if (isAuthenticated) {
+          // User is authenticated
+          const user = await auth0.getUser();
+          userProfile.innerHTML = `
+            <span style="color: white; margin-right: 15px;">Welcome, ${user.name || user.email}</span>
+            <button id="logout" style="background: #e50914; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Log Out</button>
+          `;
+          loginContainer.style.display = 'none';
+          userProfile.style.display = 'block';
+          
+          // Add logout event listener
+          document.getElementById('logout').addEventListener('click', logout);
+        } else {
+          // User is not authenticated
+          loginContainer.innerHTML = `
+            <button id="login" style="background: #e50914; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+              Sign In
+            </button>
+          `;
+          loginContainer.style.display = 'block';
+          userProfile.style.display = 'none';
+          
+          // Add login event listener
+          document.getElementById('login').addEventListener('click', login);
+        }
+      };
 
-<!-- Add these in your navigation -->
-<nav>
-  <div id="login-container">
-    <!-- Login/Logout buttons will be inserted here -->
-  </div>
-  <div id="user-profile">
-    <!-- User info will be inserted here -->
-  </div>
-</nav>
+      // Initialize the application
+      const init = async () => {
+        await configureClient();
+        
+        // Check for the code and state parameters from Auth0
+        const query = window.location.search;
+        if (query.includes('code=') && query.includes('state=')) {
+          // Process the login state
+          await auth0.handleRedirectCallback();
+          
+          // Remove the query parameters
+          window.history.replaceState({}, document.title, "/");
+        }
+        
+        // Update UI
+        await updateUI();
+        
+        // Protect routes
+        const isAuthenticated = await auth0.isAuthenticated();
+        if (!isAuthenticated && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      };
+
+      // Initialize when the page loads
+      window.addEventListener('load', init);
+    </script>
+
+    <!-- Navigation with Auth0 Integration -->
+    <nav style="display: flex; justify-content: flex-end; padding: 1rem 3rem; position: absolute; top: 0; right: 0; z-index: 1000;">
+      <div id="login-container" style="display: none;">
+        <!-- Login button will be inserted here -->
+      </div>
+      <div id="user-profile" style="display: none;">
+        <!-- User info will be inserted here -->
+      </div>
+    </nav>
 
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
