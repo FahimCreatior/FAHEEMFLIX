@@ -807,77 +807,39 @@
             }
         });
         
-        // Vimeo Player API
-        let vimeoPlayer;
-        
-        // Initialize Vimeo Player
-        function initVimeoPlayer(videoId) {
-            try {
-                const container = document.getElementById('vimeoPlayer');
-                const playerContainer = document.getElementById('vimeoPlayerContainer');
-                
-                // Clear previous iframe
-                container.innerHTML = '';
-                
-                // Create iframe with proper attributes for Vimeo
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&loop=0&title=0&byline=0&portrait=0&transparent=0`;
-                iframe.width = '100%';
-                iframe.height = '100%';
-                iframe.frameBorder = '0';
-                iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
-                iframe.allowFullscreen = true;
-                iframe.setAttribute('webkitallowfullscreen', '');
-                iframe.setAttribute('mozallowfullscreen', '');
-                iframe.style.border = 'none';
-                
-                // Append iframe to container
-                container.appendChild(iframe);
-                
-                // Show the player container
-                playerContainer.style.display = 'block';
-                
-                // Prevent page scrolling
-                document.body.style.overflow = 'hidden';
-                
-                // Focus the iframe for keyboard controls
-                setTimeout(() => {
-                    iframe.focus();
-                }, 100);
-                
-                return iframe;
-            } catch (error) {
-                console.error('Error initializing Vimeo player:', error);
-                alert('Error loading video. Please try again.');
-                closeVideoPlayer();
-                return null;
-            }
-        }
-        
-        // Close video player
+        // Initialize search functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const openSearch = document.getElementById('openSearch');
+            const closeSearch = document.getElementById('closeSearch');
+            const searchModal = document.getElementById('searchModal');
+            const searchInput = document.getElementById('movieSearchInput');
+
+            if (openSearch) openSearch.addEventListener('click', () => searchModal.style.display = 'flex');
+            if (closeSearch) closeSearch.addEventListener('click', () => searchModal.style.display = 'none');
+            if (searchInput) searchInput.focus();
+        });
+        // Close video player function
         function closeVideoPlayer() {
-            try {
-                const playerContainer = document.getElementById('vimeoPlayerContainer');
-                if (!playerContainer) return;
-                
-                // Pause any playing video
-                const iframe = document.querySelector('#vimeoPlayer iframe');
-                if (iframe && iframe.contentWindow) {
-                    try {
-                        const player = new Vimeo.Player(iframe);
-                        player.pause();
-                    } catch (e) {
-                        console.warn('Could not pause player:', e);
-                    }
-                }
-                
-                // Hide the player
+            const playerContainer = document.getElementById('vimeoPlayerContainer');
+            const playerWrapper = document.getElementById('vimeoPlayerWrapper');
+            
+            if (playerContainer && playerWrapper) {
+                // Remove the iframe completely
+                playerWrapper.innerHTML = '';
                 playerContainer.style.display = 'none';
                 
-                // Clean up the iframe
-                const container = document.getElementById('vimeoPlayer');
-                if (container) {
-                    container.innerHTML = '';
+                // Exit fullscreen if we're in it
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => console.error(err));
+                } else if (document.webkitFullscreenElement) {
+                    document.webkitExitFullscreen().catch(err => console.error(err));
+                } else if (document.msFullscreenElement) {
+                    document.msExitFullscreen().catch(err => console.error(err));
+                }
+                
+                // Unlock screen orientation
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
                 }
                 
                 // Re-enable scrolling
@@ -887,46 +849,6 @@
                 if (window.location.hash) {
                     history.pushState('', document.title, window.location.pathname + window.location.search);
                 }
-            } catch (error) {
-                console.error('Error closing video player:', error);
-            }
-        }
-        
-        // Play video function
-        function playVideo(videoId) {
-            try {
-                if (!videoId) {
-                    const activePage = document.querySelector('#movieDetailsPage.active');
-                    if (activePage) {
-                        videoId = activePage.dataset.vimeoId;
-                    }
-                }
-                
-                if (videoId) {
-                    // Extract just the numeric ID if a full URL was provided
-                    const match = videoId.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/|\/)(\d+)/);
-                    if (match && match[1]) {
-                        videoId = match[1];
-                    }
-                    
-                    console.log('Playing video with ID:', videoId);
-                    const iframe = initVimeoPlayer(videoId);
-                    
-                    // Add error handling for the iframe
-                    if (iframe) {
-                        iframe.onerror = function() {
-                            console.error('Error loading Vimeo iframe');
-                            closeVideoPlayer();
-                            alert('Error loading video. Please check your connection and try again.');
-                        };
-                    }
-                } else {
-                    console.error('No video ID provided');
-                }
-            } catch (error) {
-                console.error('Error in playVideo:', error);
-                closeVideoPlayer();
-                alert('Error playing video. Please try again.');
             }
         }
     </script>
