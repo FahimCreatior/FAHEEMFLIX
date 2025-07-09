@@ -171,11 +171,32 @@ function showMovieDetails(title, poster, rating, year, duration, description, ca
     const descEl = document.getElementById('movieDetailsDescription');
     const castEl = document.getElementById('movieDetailsStarring');
     const directorEl = document.getElementById('movieDetailsDirector');
-    const playButtonContainer = document.querySelector('.movie-details-buttons');
     
-    if (!page || !header || !titleEl || !metaEl || !descEl || !castEl || !directorEl || !playButtonContainer) {
+    if (!page || !header || !titleEl || !metaEl || !descEl || !castEl || !directorEl) {
         console.error('Missing required elements in the DOM');
         return;
+    }
+    
+    // Get or create the play button container if it doesn't exist
+    let playButtonContainer = document.querySelector('.movie-details-buttons');
+    if (!playButtonContainer) {
+        // If the container doesn't exist, create it
+        const content = document.querySelector('.movie-details-content');
+        if (content) {
+            playButtonContainer = document.createElement('div');
+            playButtonContainer.className = 'movie-details-buttons';
+            playButtonContainer.innerHTML = `
+                <button class="btn btn-primary" onclick="playVideo()">
+                    <i class="fas fa-play"></i> Play Now
+                </button>
+            `;
+            // Insert after the meta element
+            if (metaEl && metaEl.nextSibling) {
+                content.insertBefore(playButtonContainer, metaEl.nextSibling);
+            } else {
+                content.appendChild(playButtonContainer);
+            }
+        }
     }
     
     try {
@@ -194,10 +215,12 @@ function showMovieDetails(title, poster, rating, year, duration, description, ca
         directorEl.textContent = director || 'N/A';
         
         // Show/hide play button based on whether this is from search
-        if (fromSearch) {
-            playButtonContainer.style.display = 'none';
-        } else {
-            playButtonContainer.style.display = 'block';
+        if (playButtonContainer) {
+            if (fromSearch) {
+                playButtonContainer.style.display = 'none';
+            } else {
+                playButtonContainer.style.display = 'block';
+            }
         }
         
         // Show the details page
