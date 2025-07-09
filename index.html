@@ -9,6 +9,29 @@
     <!-- Load Auth0 SDK directly -->
     <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js" crossorigin="anonymous"></script>
     
+    <!-- Simple icon font for basic icons -->
+    <style>
+      @font-face {
+        font-family: 'System Icons';
+        src: local('Segoe UI Symbol'), local('Apple Symbols'), local('Noto Color Emoji');
+        font-weight: normal;
+        font-style: normal;
+      }
+      .icon {
+        font-family: 'System Icons', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-style: normal;
+        font-weight: normal;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+      }
+      .icon-bars:before { content: '☰'; }
+      .icon-close:before { content: '✕'; }
+      .icon-download:before { content: '↓'; }
+      .icon-search:before { content: '🔍'; }
+      .icon-user:before { content: '👤'; }
+      .icon-logout:before { content: '🚪'; }
+    </style>
+    
     <script>
       // Initialize Auth0 client
       let auth0 = null;
@@ -258,14 +281,16 @@
             background: #f40612;
             transform: translateY(-2px);
         }
+        /* Base Styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             background: #0f0f0f;
             color: white;
             overflow-x: hidden;
@@ -381,16 +406,16 @@
             width: 100%;
         }
 
+        /* Logo */
         .logo {
-            color: #e50914;
             font-size: 2rem;
             font-weight: 800;
-            font-family: 'Montserrat', sans-serif;
+            color: #e50914;
             text-decoration: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            font-weight: 900;
         }
 
         .logo:hover {
@@ -1051,7 +1076,7 @@
     <header class="header">
         <a href="#" class="logo">FAHEEMFLIX</a>
         <button class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
+            <span class="icon icon-bars"></span>
         </button>
         <nav>
             <ul class="nav-menu" id="navMenu">
@@ -1183,7 +1208,7 @@
     <div class="modal" id="movieModal">
         <div class="modal-content">
             <button class="close-button" id="closeModal">
-                <i class="fas fa-times"></i>
+                <span class="icon icon-close"></span>
             </button>
             <div class="modal-header">
                 <div class="modal-video" id="modalVideo"></div>
@@ -1638,7 +1663,7 @@
     </script>
     <!-- PWA Install Button -->
     <button id="installAppBtn" class="install-app-btn" aria-label="Install App">
-      <i class="fas fa-download"></i> Install App
+      <span class="icon icon-download"></span> Install App
     </button>
 
     <!-- PWA Installation Script -->
