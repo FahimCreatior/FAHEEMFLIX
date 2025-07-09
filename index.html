@@ -94,11 +94,44 @@
       // Sign in with Google
       async function signInWithGoogle() {
         try {
+          console.log('Initializing Google Sign-In...');
           const provider = new firebase.auth.GoogleAuthProvider();
-          await firebase.auth().signInWithPopup(provider);
+          provider.addScope('profile');
+          provider.addScope('email');
+          
+          console.log('Opening Google Sign-In popup...');
+          const result = await firebase.auth().signInWithPopup(provider);
+          console.log('Sign-in successful:', result);
+          
+          // This gives you a Google Access Token. You can use it to access the Google API.
+          const credential = result.credential;
+          const token = credential?.accessToken;
+          const user = result.user;
+          console.log('User signed in:', user);
+          
         } catch (error) {
-          console.error('Error signing in with Google:', error);
-          alert('Failed to sign in. Please try again.');
+          console.error('Error details:', {
+            code: error.code,
+            message: error.message,
+            email: error.email,
+            credential: error.credential
+          });
+          
+          let errorMessage = 'Failed to sign in. Please try again.';
+          
+          // Handle specific error cases
+          if (error.code === 'auth/account-exists-with-different-credential') {
+            errorMessage = 'An account already exists with the same email but different sign-in credentials.';
+          } else if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = 'The sign-in popup was closed before completing the sign-in.';
+          } else if (error.code === 'auth/popup-blocked') {
+            errorMessage = 'The sign-in popup was blocked by your browser. Please allow popups for this site.';
+          } else if (error.code === 'auth/unauthorized-domain') {
+            errorMessage = 'This domain is not authorized for OAuth operations.';
+          }
+          
+          console.error('Sign-in error:', error);
+          alert(errorMessage);
         }
       }
       
