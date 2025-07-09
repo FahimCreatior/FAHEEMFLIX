@@ -684,19 +684,19 @@
             <h2 class="category-title">Continue Watching</h2>
             <div class="movies-grid continue-watching">
                 <!-- Card #1 -->
-                <div class="movie-card" onclick="showMovieDetails('Thor', 'https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg', 'PG-13', '2010', '2h 28m', 'A powerful but arrogant god Thor is cast out of Asgard to live amongst humans in Midgard.', 'Chris Hemsworth, Natalie Portman', 'Kenneth Branagh', '1099981199')">
+                <div class="movie-card" onclick="showMovieDetails('A Night In 2005', 'https://i.ibb.co/0p8F9vd9/A-Night-in-2005.jpg', '18', '2024', '1h 50m', 'What started out as a fun night at a prom after party in 2005, quickly turns into Ife&apos;s worst nightmare. She carries a dark secret from that night into adulthood that continues to plague her everyday life.', 'Cast details not provided', 'Director not provided', '1100007450')">
                     <div class="movie-thumbnail">
-                        <img src="https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg" alt="Thor">
+                        <img src="https://i.ibb.co/0p8F9vd9/A-Night-in-2005.jpg" alt="A Night In 2005">
                         <div class="play-button"><i class="fas fa-play"></i></div>
                         <div class="progress-bar">
-                            <div class="progress" style="width: 65%"></div>
+                            <div class="progress" style="width: 35%"></div>
                         </div>
                     </div>
                     <div class="movie-info">
-                        <h3 class="movie-title">Thor</h3>
+                        <h3 class="movie-title">A Night In 2005</h3>
                         <div class="movie-meta">
-                            <span class="movie-rating">PG-13</span>
-                            <span class="movie-year">2023</span>
+                            <span class="movie-rating">18</span>
+                            <span class="movie-year">2024</span>
                         </div>
                     </div>
                 </div>
@@ -1037,4 +1037,25 @@
                 if (document.fullscreenElement) {
                     document.exitFullscreen().catch(err => console.error(err));
                 } else if (document.webkitFullscreenElement) {
-       
+                    document.webkitExitFullscreen().catch(err => console.error(err));
+                } else if (document.msFullscreenElement) {
+                    document.msExitFullscreen().catch(err => console.error(err));
+                }
+                
+                // Unlock screen orientation
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+                
+                // Re-enable scrolling
+                document.body.style.overflow = '';
+                
+                // Remove any URL fragments that might be causing issues
+                if (window.location.hash) {
+                    history.pushState('', document.title, window.location.pathname + window.location.search);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
