@@ -1092,6 +1092,10 @@
             <span class="icon icon-bars"></span>
         </button>
         <nav>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search movies..." class="search-input">
+                <span class="icon icon-search"></span>
+            </div>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#">Home</a></li>
                 <li><a href="movies.html">Movies</a></li>
@@ -1670,14 +1674,27 @@
         }
 
         // Search functionality
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredMovies = movies.filter(movie =>
-                movie.title.toLowerCase().includes(searchTerm) ||
-                movie.description.toLowerCase().includes(searchTerm)
-            );
-            createMovieCards(filteredMovies);
-        });
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                try {
+                    const searchTerm = e.target.value.toLowerCase();
+                    if (!movies || !Array.isArray(movies)) {
+                        console.error('Movies data is not available');
+                        return;
+                    }
+                    const filteredMovies = movies.filter(movie => 
+                        movie && 
+                        movie.title && 
+                        movie.description &&
+                        (movie.title.toLowerCase().includes(searchTerm) ||
+                         movie.description.toLowerCase().includes(searchTerm))
+                    );
+                    createMovieCards(filteredMovies);
+                } catch (error) {
+                    console.error('Error during search:', error);
+                }
+            });
+        }
 
         // Close player when clicking outside
         playerModal.addEventListener('click', (e) => {
