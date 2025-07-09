@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' https: data: blob:;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-      style-src 'self' 'unsafe-inline' https:;
-      img-src 'self' data: blob: https:;
-      media-src 'self' https: blob:;
-      connect-src 'self' https: wss:;
-      font-src 'self' https: data:;
-      frame-src 'self' https:;
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://kit.fontawesome.com https://cdn.auth0.com;
+      style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+      img-src 'self' data: https:;
+      font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:;
+      connect-src 'self' https://*.tmdb.org https://api.themoviedb.org https://*.auth0.com https://dev-jphdcibt0uw3a4jt.us.auth0.com;
+      media-src 'self' https:;
+      frame-src 'self' https://*.auth0.com;
       object-src 'none';
       base-uri 'self';
-      form-action 'self';
+      form-action 'self' https://*.auth0.com;
       frame-ancestors 'self';
     ">
     <title>FaheemFlix - Movies</title>
@@ -609,6 +609,17 @@
       // Initialize Auth0 client
       let auth0 = null;
       
+      // Load Auth0 script dynamically
+      const loadAuth0 = () => {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js';
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load Auth0 SDK'));
+          document.head.appendChild(script);
+        });
+      };
+      
       // Configure and initialize Auth0 client
       const configureClient = async () => {
         auth0 = await createAuth0Client({
@@ -677,24 +688,42 @@
 
       // Initialize the application
       const init = async () => {
-        await configureClient();
-        
-        // Check for the code and state parameters from Auth0
-        const query = window.location.search;
-        if (query.includes('code=') && query.includes('state=')) {
-          // Process the login state
-          await auth0.handleRedirectCallback();
+        try {
+          // First load Auth0 SDK
+          await loadAuth0();
           
-          // Remove the query parameters
-          window.history.replaceState({}, document.title, "/movies.html");
+          // Then configure the client
+          await configureClient();
+          
+          // Check for the code and state parameters from Auth0
+          const query = window.location.search;
+          if (query.includes('code=') && query.includes('state=')) {
+            try {
+              // Process the login state
+              await auth0.handleRedirectCallback();
+              // Remove the query parameters
+              window.history.replaceState({}, document.title, "/movies.html");
+            } catch (error) {
+              console.error('Error handling redirect callback:', error);
+            }
+          }
+          
+          // Update UI
+          await updateUI();
+        } catch (error) {
+          console.error('Error initializing Auth0:', error);
+          // Show error to user
+          const errorDiv = document.createElement('div');
+          errorDiv.style.color = 'white';
+          errorDiv.style.padding = '10px';
+          errorDiv.style.backgroundColor = '#ff4444';
+          errorDiv.textContent = 'Error initializing authentication. Please refresh the page.';
+          document.body.prepend(errorDiv);
         }
-        
-        // Update UI
-        await updateUI();
       };
 
       // Initialize when the page loads
-      window.addEventListener('load', init);
+      document.addEventListener('DOMContentLoaded', init);
     </script>
 
     <header class="header">
