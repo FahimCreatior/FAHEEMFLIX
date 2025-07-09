@@ -1,4 +1,4 @@
-const CACHE_NAME = 'faheemflix-v4';
+const CACHE_NAME = 'faheemflix-v5';
 const OFFLINE_URL = '/offline.html';
 
 // Core assets to cache during installation
@@ -23,7 +23,10 @@ const CORE_ASSETS = [
   '/icons/apple-touch-icon.png',
   '/icons/favicon.ico',
   '/icons/favicon-16x16.png',
-  '/icons/favicon-32x32.png'
+  '/icons/favicon-32x32.png',
+  // External assets
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap'
 ];
 
 // Install event - cache core assets
@@ -37,7 +40,14 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[Service Worker] Caching core assets');
-        return cache.addAll(CORE_ASSETS);
+        // Try to add all core assets, but don't fail if some external resources fail
+        return Promise.all(
+          CORE_ASSETS.map(url => 
+            cache.add(url).catch(err => 
+              console.warn(`[Service Worker] Failed to cache ${url}:`, err)
+            )
+          )
+        );
       })
       .then(() => {
         console.log('[Service Worker] Core assets cached');
@@ -62,12 +72,21 @@ self.addEventListener('activate', event => {
       );
     }).then(() => {
       // Claim clients immediately to handle all fetch events
+      console.log('[Service Worker] Claiming clients');
       return self.clients.claim();
     })
   );
 });
 
-// Fetch event handler
+// Listen for messages from the page
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[Service Worker] Skipping waiting');
+    self.skipWaiting();
+  }
+});
+
+// Fetch event handler with improved caching strategy
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
@@ -86,7 +105,8 @@ self.addEventListener('fetch', event => {
           if (response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
-              .then(cache => cache.put(request, responseToCache));
+              .then(cache => cache.put(request, responseToCache))
+              .catch(err => console.error('Failed to cache response:', err));
           }
           return response;
         })
@@ -99,14 +119,36 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // For all other requests, try cache first, then network
+  // For API requests, try network first, then cache
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Only cache successful responses
+          if (response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put(request, responseToCache))
+              .catch(err => console.error('Failed to cache API response:', err));
+          }
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to get from cache
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+  
+  // For static assets, try cache first, then network
   event.respondWith(
-    caches.match(request).then(response => {
+    caches.match(request).then(cachedResponse => {
       // Return cached response if found
-      if (response) {
+      if (cachedResponse) {
         // Update cache in the background
         fetchAndUpdateCache(request, CACHE_NAME);
-        return response;
+        return cachedResponse;
       }
       
       // If not in cache, fetch from network
@@ -115,20 +157,28 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Helper function to fetch and update cache
+/**
+ * Fetch and update cache with improved error handling and logging
+ */
 async function fetchAndUpdateCache(request, cacheName) {
   try {
     const networkResponse = await fetch(request);
     
     // If we got a valid response, cache it
     if (networkResponse && networkResponse.status === 200) {
-      const cache = await caches.open(cacheName);
-      await cache.put(request, networkResponse.clone());
+      try {
+        const cache = await caches.open(cacheName);
+        await cache.put(request, networkResponse.clone());
+      } catch (cacheError) {
+        console.warn('[Service Worker] Failed to cache response for', request.url, cacheError);
+      }
+    } else if (networkResponse && networkResponse.status >= 400) {
+      console.warn(`[Service Worker] Network request failed with status ${networkResponse.status} for`, request.url);
     }
     
     return networkResponse;
   } catch (error) {
-    console.log('[Service Worker] Network request failed:', error);
+    console.warn('[Service Worker] Network request failed:', error);
     
     // If it's an image, return a placeholder
     if (request.headers.get('Accept').includes('image')) {
@@ -139,14 +189,23 @@ async function fetchAndUpdateCache(request, cacheName) {
     }
     
     // For other requests, try to get from cache
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
+    try {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+    } catch (matchError) {
+      console.warn('[Service Worker] Error matching cache for', request.url, matchError);
     }
     
     // If we don't have a cached version, return an offline page for HTML requests
     if (request.headers.get('Accept').includes('text/html')) {
-      return caches.match(OFFLINE_URL);
+      const offlineResponse = await caches.match(OFFLINE_URL);
+      if (offlineResponse) {
+        return offlineResponse;
+      }
+      // Fallback to index.html if offline.html is not available
+      return caches.match('/index.html');
     }
     
     // For other requests, return a generic offline response
@@ -157,6 +216,20 @@ async function fetchAndUpdateCache(request, cacheName) {
     });
   }
 }
+
+// Handle background sync (if needed)
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-data') {
+    console.log('[Service Worker] Background sync triggered');
+    // Add your background sync logic here
+  }
+});
+
+// Handle push notifications (if needed)
+self.addEventListener('push', event => {
+  console.log('[Service Worker] Push received');
+  // Add your push notification handling here
+});
 
 // Listen for messages from the page
 self.addEventListener('message', event => {
