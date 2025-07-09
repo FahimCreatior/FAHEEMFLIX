@@ -6,6 +6,7 @@
     <title>FAHEEMZFLIX - Movies</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://player.vimeo.com/api/player.js"></script>
     <style>
         /* Search Modal Styles */
         .search-modal {
@@ -493,50 +494,58 @@
         </div>
     </header>
 
+    <!-- Vimeo Player Container -->
+    <div id="vimeoPlayerContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999;">
+        <div id="vimeoPlayer" style="width: 100%; height: 100%;"></div>
+        <button onclick="closeVideoPlayer()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer;">×</button>
+    </div>
+
     <main class="main-content">
         <div class="movies-grid">
-            <!-- 
-            To add a Vimeo video:
-            1. Get your Vimeo video ID from the URL (e.g., if URL is vimeo.com/123456, the ID is 123456)
-            2. Replace the last parameter in showMovieDetails with your Vimeo ID
-            3. Current format: showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId)
-            -->
-            
             <!-- Card #1 -->
-            <div class="movie-card" onclick="showMovieDetails('Thor', 'https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg', 'PG-13', '2010', '2h 28m', 'A powerful but arrogant god Thor is cast out of Asgard to live amongst humans in Midgard.', 'Chris Hemsworth, Natalie Portman', 'Kenneth Branagh', '1087366972')">
+            <div class="movie-card" data-video="https://player.vimeo.com/video/1087366972" onclick="showMovieDetails('Thor', 'https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg', 'PG-13', '2010', '2h 28m', 'A powerful but arrogant god Thor is cast out of Asgard to live amongst humans in Midgard.', 'Chris Hemsworth, Natalie Portman', 'Kenneth Branagh', '1087366972')">
                 <div class="movie-thumbnail">
                     <img src="https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg" alt="Thor">
+                    <div class="play-button"><i class="fas fa-play"></i></div>
                 </div>
                 <div class="movie-info">
                     <h3 class="movie-title">Thor</h3>
-                    <div class="movie-duration">
-                        <i class="fas fa-clock"></i> 2h 28m
+                    <div class="movie-meta">
+                        <span class="movie-rating">PG-13</span>
+                        <span class="movie-year">2010</span>
+                        <span class="movie-duration">2h 28m</span>
                     </div>
                 </div>
             </div>
 
             <!-- Card #2 -->
-            <div class="movie-card" onclick="showMovieDetails('Fountain of Youth', 'https://image.tmdb.org/t/p/w500/4iWjGghUj2uyHo2Hyw8NFBvsNGm.jpg', 'PG-13', '2011', '1h 55m', 'A mystical adventure in search of eternal life and the legendary Fountain of Youth.', 'Emily Blunt, Chris Pine', 'James Cameron', '367043603')">
+            <div class="movie-card" data-video="https://player.vimeo.com/video/367043603" onclick="showMovieDetails('Fountain of Youth', 'https://image.tmdb.org/t/p/w500/4iWjGghUj2uyHo2Hyw8NFBvsNGm.jpg', 'PG-13', '2011', '1h 55m', 'A mystical adventure in search of eternal life and the legendary Fountain of Youth.', 'Emily Blunt, Chris Pine', 'James Cameron', '367043603')">
                 <div class="movie-thumbnail">
                     <img src="https://image.tmdb.org/t/p/w500/4iWjGghUj2uyHo2Hyw8NFBvsNGm.jpg" alt="Fountain of Youth">
+                    <div class="play-button"><i class="fas fa-play"></i></div>
                 </div>
                 <div class="movie-info">
                     <h3 class="movie-title">Fountain of Youth</h3>
-                    <div class="movie-duration">
-                        <i class="fas fa-clock"></i> 2h 15m
+                    <div class="movie-meta">
+                        <span class="movie-rating">PG-13</span>
+                        <span class="movie-year">2011</span>
+                        <span class="movie-duration">1h 55m</span>
                     </div>
                 </div>
             </div>
 
             <!-- Card #3 -->
-            <div class="movie-card" onclick="showMovieDetails('Interceptor', 'https://image.tmdb.org/t/p/w500/jBKNAfANo4e3rzJtb7aHfYNd7b3.jpg', 'PG-13', '2022', '1h 38m', 'A lone army captain must use her years of tactical training to save humanity from an imminent threat.', 'Elsa Pataky, Luke Bracey', 'Matthew Reilly', '701600914')">
+            <div class="movie-card" data-video="https://player.vimeo.com/video/701600914" onclick="showMovieDetails('Interceptor', 'https://image.tmdb.org/t/p/w500/jBKNAfANo4e3rzJtb7aHfYNd7b3.jpg', 'PG-13', '2022', '1h 38m', 'A lone army captain must use her years of tactical training to save humanity from an imminent threat.', 'Elsa Pataky, Luke Bracey', 'Matthew Reilly', '701600914')">
                 <div class="movie-thumbnail">
                     <img src="https://image.tmdb.org/t/p/w500/jBKNAfANo4e3rzJtb7aHfYNd7b3.jpg" alt="Interceptor">
+                    <div class="play-button"><i class="fas fa-play"></i></div>
                 </div>
                 <div class="movie-info">
                     <h3 class="movie-title">Interceptor</h3>
-                    <div class="movie-duration">
-                        <i class="fas fa-clock"></i> 1h 38m
+                    <div class="movie-meta">
+                        <span class="movie-rating">PG-13</span>
+                        <span class="movie-year">2022</span>
+                        <span class="movie-duration">1h 38m</span>
                     </div>
                 </div>
             </div>
@@ -712,9 +721,70 @@
         // Close the movie details page when the back button is pressed
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                document.getElementById('movieDetailsPage').classList.remove('active');
+                const detailsPage = document.getElementById('movieDetailsPage');
+                const videoPlayer = document.getElementById('vimeoPlayerContainer');
+                
+                if (detailsPage && detailsPage.classList.contains('active')) {
+                    detailsPage.classList.remove('active');
+                }
+                
+                if (videoPlayer && videoPlayer.style.display === 'block') {
+                    closeVideoPlayer();
+                }
             }
         });
+        
+        // Vimeo Player API
+        let vimeoPlayer;
+        
+        // Initialize Vimeo Player
+        function initVimeoPlayer(videoId) {
+            const container = document.getElementById('vimeoPlayer');
+            container.innerHTML = ''; // Clear previous iframe
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&loop=0&title=0&byline=0&portrait=0`;
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.frameBorder = '0';
+            iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+            iframe.allowFullscreen = true;
+            
+            container.appendChild(iframe);
+            document.getElementById('vimeoPlayerContainer').style.display = 'block';
+            
+            // Add a class to body to prevent scrolling when video is playing
+            document.body.style.overflow = 'hidden';
+            
+            return iframe;
+        }
+        
+        // Close video player
+        function closeVideoPlayer() {
+            const playerContainer = document.getElementById('vimeoPlayerContainer');
+            if (playerContainer) {
+                playerContainer.style.display = 'none';
+                const iframe = document.querySelector('#vimeoPlayer iframe');
+                if (iframe) {
+                    // Pause the video when closing
+                    const player = new Vimeo.Player(iframe);
+                    player.pause();
+                }
+                // Re-enable scrolling
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Play video function
+        function playVideo(videoId) {
+            if (!videoId) {
+                videoId = document.querySelector('#movieDetailsPage.active')?.dataset.vimeoId;
+            }
+            
+            if (videoId) {
+                initVimeoPlayer(videoId);
+            }
+        }
     </script>
 </body>
 </html>
