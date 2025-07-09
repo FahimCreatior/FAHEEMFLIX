@@ -6,8 +6,9 @@
     <meta name="theme-color" content="#e50914">
     <meta name="description" content="Stream your favorite movies and shows on FaheemFlix">
     
-    <!-- Load Auth0 SDK -->
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.2/auth0-spa-js.production.js"></script>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <!-- Simple icon font for basic icons -->
     <style>
@@ -17,6 +18,7 @@
         font-weight: normal;
         font-style: normal;
       }
+      
       .icon {
         font-family: 'System Icons', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         font-style: normal;
@@ -24,208 +26,148 @@
         line-height: 1;
         -webkit-font-smoothing: antialiased;
       }
+      
       .icon-bars:before { content: '☰'; }
       .icon-close:before { content: '✕'; }
       .icon-download:before { content: '↓'; }
       .icon-search:before { content: '🔍'; }
       .icon-user:before { content: '👤'; }
       .icon-logout:before { content: '🚪'; }
+      
+      /* Auth styles */
+      .auth-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .auth-button {
+        background: #e50914;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+      }
+      
+      .auth-button:hover {
+        background: #f40612;
+      }
+      
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
     </style>
     
     <script>
-      // Initialize Auth0 client
-      let auth0 = null;
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDbgEJmqKbmAFwSKfqHF7g8ENlAVtqoq3s",
+        authDomain: "authentication-faheemflix.firebaseapp.com",
+        projectId: "authentication-faheemflix",
+        storageBucket: "authentication-faheemflix.appspot.com",
+        messagingSenderId: "209153078463",
+        appId: "1:209153078463:web:c9c79058355d1ae98d020a",
+        measurementId: "G-7QT5XZQ89N"
+      };
       
-      // Configure and initialize Auth0 client
-      const configureClient = async () => {
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      
+      // Auth state observer
+      firebase.auth().onAuthStateChanged((user) => {
+        updateUI(user);
+      });
+      
+      // Sign in with Google
+      async function signInWithGoogle() {
         try {
-          // Wait for Auth0 SDK to be loaded
-          if (typeof createAuth0Client === 'undefined') {
-            // If not loaded yet, wait for it
-            await new Promise((resolve, reject) => {
-              let attempts = 0;
-              const maxAttempts = 10;
-              const checkAuth0 = setInterval(() => {
-                attempts++;
-                if (typeof createAuth0Client !== 'undefined') {
-                  clearInterval(checkAuth0);
-                  resolve();
-                } else if (attempts >= maxAttempts) {
-                  clearInterval(checkAuth0);
-                  reject(new Error('Auth0 SDK failed to load'));
-                }
-              }, 100);
-            });
-          }
-          
-          auth0 = await createAuth0Client({
-            domain: "dev-jphdcibt0uw3a4jt.us.auth0.com",
-            client_id: "mwrycDL8XGnpFrkRYslvfhvkVWIxKOi8",
-            redirect_uri: window.location.origin,
-            cacheLocation: 'localstorage',
-            useRefreshTokens: true,
-            audience: "https://dev-jphdcibt0uw3a4jt.us.auth0.com/api/v2/",
-            scope: "openid profile email"
-          });
-          
-          // Check for authentication callback
-          const isAuthenticated = await auth0.isAuthenticated();
-          if (!isAuthenticated && window.location.search.includes('code=')) {
-            await auth0.handleRedirectCallback();
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-          
-          console.log('Auth0 client initialized successfully');
-          return auth0;
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
         } catch (error) {
-          console.error('Error initializing Auth0 client:', error);
-          // Fallback to mock auth for development
-          console.warn('Falling back to mock authentication');
-          return {
-            isAuthenticated: async () => true,
-            loginWithRedirect: () => window.location.href = '/',
-            logout: () => window.location.href = '/',
-            getUser: () => ({
-              name: 'Demo User',
-              email: 'demo@example.com',
-              picture: ''
-            })
-          };
+          console.error('Error signing in with Google:', error);
+          alert('Failed to sign in. Please try again.');
         }
-      };
-
-      // Handle login
-      const login = async () => {
-        await auth0.loginWithRedirect({
-          redirect_uri: window.location.origin
+      }
+      
+      // Sign out
+      function signOut() {
+        firebase.auth().signOut().then(() => {
+          // Sign-out successful
+        }).catch((error) => {
+          console.error('Error signing out:', error);
         });
-      };
-
-      // Handle logout
-      const logout = () => {
-        auth0.logout({
-          returnTo: window.location.origin
-        });
-      };
-
+      }
+      
       // Update UI based on authentication state
-      const updateUI = async () => {
-        const isAuthenticated = await auth0.isAuthenticated();
+      function updateUI(user) {
         const loginContainer = document.getElementById('login-container');
         const userProfile = document.getElementById('user-profile');
         
-        if (isAuthenticated) {
-          // User is authenticated
-          const user = await auth0.getUser();
+        if (user) {
+          // User is signed in
           userProfile.innerHTML = `
-            <span style="color: white; margin-right: 15px;">Welcome, ${user.name || user.email}</span>
-            <button id="logout" style="background: #e50914; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Log Out</button>
+            <div class="user-profile">
+              ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}" class="user-avatar">` : ''}
+              <span>Welcome, ${user.displayName || user.email}</span>
+              <button onclick="signOut()" class="auth-button">Sign Out</button>
+            </div>
           `;
           loginContainer.style.display = 'none';
-          userProfile.style.display = 'block';
-          
-          // Add logout event listener
-          document.getElementById('logout').addEventListener('click', logout);
+          userProfile.style.display = 'flex';
         } else {
-          // User is not authenticated
+          // User is signed out
           loginContainer.innerHTML = `
-            <button id="login" style="background: #e50914; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">
-              Sign In
+            <button onclick="signInWithGoogle()" class="auth-button">
+              <i class="icon icon-user"></i> Sign In with Google
             </button>
           `;
           loginContainer.style.display = 'block';
           userProfile.style.display = 'none';
-          
-          // Add login event listener
-          document.getElementById('login').addEventListener('click', login);
         }
-      };
+      }
 
       // Initialize the application
-      const init = async () => {
+      async function initializeApp() {
         try {
-          // Configure the Auth0 client
-          await configureClient();
+          // Initialize vimeoVideos array if not already defined
+          window.vimeoVideos = window.vimeoVideos || [];
           
-          // Check for the code and state parameters from Auth0
-          const query = window.location.search;
-          if (query.includes('code=') && query.includes('state=')) {
-            try {
-              console.log('Handling redirect callback...');
-              // Process the login state
-              await auth0.handleRedirectCallback();
-              console.log('Redirect callback handled successfully');
-              // Remove the query parameters
-              window.history.replaceState({}, document.title, "/");
-              // Initialize the application
-              const initializeApp = async () => {
-                try {
-                  // Initialize vimeoVideos array if not already defined
-                  window.vimeoVideos = window.vimeoVideos || [];
-                  
-                  // Check if user is authenticated
-                  const isAuthenticated = await auth0.isAuthenticated();
-                  if (isAuthenticated) {
-                    // Show user profile if authenticated
-                    await updateUI();
-                  }
-
-                  // Initialize movie functionality
-                  initializeMovies();
-                  
-                  // Load featured content
-                  loadFeaturedContent();
-                  
-                } catch (error) {
-                  console.error('Error initializing app:', error);
-                }
-              };
-              initializeApp();
-              // Update the UI
-              await updateUI();
-            } catch (error) {
-              console.error('Error handling redirect callback:', error);
-            }
-          } else {
-            // Initialize the application
-            const initializeApp = async () => {
-              try {
-                // Initialize vimeoVideos array if not already defined
-                window.vimeoVideos = window.vimeoVideos || [];
-                
-                // Check if user is authenticated
-                const isAuthenticated = await auth0.isAuthenticated();
-                if (isAuthenticated) {
-                  // Show user profile if authenticated
-                  await updateUI();
-                }
-
-                // Initialize movie functionality
-                initializeMovies();
-                
-                // Load featured content
-                loadFeaturedContent();
-                
-              } catch (error) {
-                console.error('Error initializing app:', error);
-              }
-            };
-            initializeApp();
-            // Update the UI
-            await updateUI();
-          }
+          // Initialize movie functionality
+          initializeMovies();
+          
+          // Load featured content
+          loadFeaturedContent();
+          
+          // Set up auth state listener
+          firebase.auth().onAuthStateChanged((user) => {
+            updateUI(user);
+          });
+          
         } catch (error) {
-          console.error('Error initializing Auth0:', error);
+          console.error('Error initializing app:', error);
           // Show error to user
           const errorDiv = document.createElement('div');
           errorDiv.style.color = 'white';
           errorDiv.style.padding = '10px';
           errorDiv.style.backgroundColor = '#ff4444';
-          errorDiv.textContent = 'Error initializing authentication. Please refresh the page.';
+          errorDiv.textContent = 'Error initializing application. Please refresh the page.';
           document.body.prepend(errorDiv);
         }
-      };
-
+      }
+      
       // Initialize when the page loads
       document.addEventListener('DOMContentLoaded', () => {
         // Show loading state
@@ -235,9 +177,9 @@
           position: fixed;
           top: 0;
           left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0,0,0,0.8);
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.9);
           display: flex;
           justify-content: center;
           align-items: center;
@@ -248,8 +190,8 @@
         loadingIndicator.textContent = 'Loading...';
         document.body.appendChild(loadingIndicator);
         
-        // Initialize auth
-        init().finally(() => {
+        // Initialize the app
+        initializeApp().finally(() => {
           // Remove loading indicator
           if (document.body.contains(loadingIndicator)) {
             document.body.removeChild(loadingIndicator);
@@ -1309,34 +1251,64 @@
             }
 
             .nav-menu li {
-                margin: 1rem 0;
+                margin: 0.5rem 0;
             }
-
-            .search-container {
-                margin-left: auto;
-                margin-right: 1rem;
+            
+            .auth-button {
+                background: #e50914;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                transition: background 0.3s ease;
+            }
+            
+            .auth-button:hover {
+                background: #f40612;
+            }
+            
+            .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: white;
+            }
+            
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
             }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <a href="#" class="logo">FAHEEMFLIX</a>
-        <button class="menu-toggle" id="menuToggle">
-            <span class="icon icon-bars"></span>
-        </button>
-        <nav>
+        <div class="header-content">
+            <div class="logo">FaheemFlix</div>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="movies.html" class="nav-link">Movies</a>
+                <a href="#" class="nav-link">TV Shows</a>
+                <a href="#" class="nav-link">My List</a>
+            </nav>
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search movies..." class="search-input">
-                <span class="icon icon-search"></span>
+                <input type="text" id="searchInput" placeholder="Search movies...">
+                <button id="searchButton">Search</button>
             </div>
-            <ul class="nav-menu" id="navMenu">
-                <li><a href="#">Home</a></li>
-                <li><a href="movies.html">Movies</a></li>
-                <li><a href="#">TV Shows</a></li>
-                <li><a href="#">My List</a></li>
-            </ul>
-        </nav>
+            <div id="login-container">
+                <button onclick="signInWithGoogle()" class="auth-button">
+                    <i class="icon icon-user"></i> Sign In with Google
+                </button>
+            </div>
+            <div id="user-profile" style="display: none; margin-left: 15px;">
+                <!-- User profile will be shown here -->
+            </div>
+        </div>
     </header>
 
     <main class="main-content">
