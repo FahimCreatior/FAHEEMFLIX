@@ -964,37 +964,65 @@
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
+            // Prevent touch events on the document while video is playing
+            document.body.style.touchAction = 'none';
+            
             // Create new iframe for the video programmatically
             const iframe = document.createElement('iframe');
             iframe.id = 'vimeoPlayer';
-            iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=0&controls=1&playsinline=0&transparent=0&background=0&dnt=1`;
-            iframe.width = '100%';
-            iframe.height = '100%';
-            iframe.frameBorder = '0';
+            iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=0&title=0&byline=0&portrait=0`;
             iframe.allow = 'autoplay; fullscreen; picture-in-picture';
             iframe.allowFullscreen = true;
-            iframe.referrerPolicy = 'origin';
-            iframe.title = 'Vimeo video player';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
             
-            // Clear any existing iframe and append the new one
+            // Clear any existing iframe and add the new one
             playerWrapper.innerHTML = '';
             playerWrapper.appendChild(iframe);
             
             playerContainer.style.display = 'block';
 
             // Request fullscreen mode
-            if (playerContainer.requestFullscreen) {
-                playerContainer.requestFullscreen();
-            } else if (playerContainer.webkitRequestFullscreen) { // Safari
-                playerContainer.webkitRequestFullscreen();
-            } else if (playerContainer.msRequestFullscreen) { // IE11
-                playerContainer.msRequestFullscreen();
-            }
+            const requestFullscreen = () => {
+                if (playerContainer.requestFullscreen) {
+                    return playerContainer.requestFullscreen();
+                } else if (playerContainer.webkitRequestFullscreen) { // Safari
+                    return playerContainer.webkitRequestFullscreen();
+                } else if (playerContainer.msRequestFullscreen) { // IE11
+                    return playerContainer.msRequestFullscreen();
+                }
+                return Promise.resolve();
+            };
 
-            // Rotate the screen to landscape mode
-            screen.orientation.lock('landscape').catch((error) => {
-                console.error('Screen orientation lock failed:', error);
+            // Lock orientation to landscape
+            const lockOrientation = () => {
+                if (screen.orientation && screen.orientation.lock) {
+                    return screen.orientation.lock('landscape').catch(error => {
+                        console.warn('Screen orientation lock not supported or failed:', error);
+                    });
+                } else if (screen.lockOrientation) {
+                    // For older browsers
+                    return screen.lockOrientation('landscape');
+                } else if (screen.mozLockOrientation) {
+                    // Firefox
+                    return screen.mozLockOrientation('landscape');
+                } else if (screen.msLockOrientation) {
+                    // MS legacy
+                    return screen.msLockOrientation('landscape');
+                }
+                return Promise.resolve();
+            };
+
+            // First go fullscreen, then lock orientation
+            requestFullscreen().then(() => {
+                return lockOrientation();
+            }).catch(error => {
+                console.error('Fullscreen or orientation lock failed:', error);
             });
+
+            // Prevent accidental orientation changes on touch devices
+            document.addEventListener('touchmove', preventTouch, { passive: false });
         }
 
         // Close the movie details page when the back button is pressed
@@ -1025,6 +1053,13 @@
             if (searchInput) searchInput.focus();
         });
         // Close video player function
+        // Prevent touch events from interfering with video playback
+        function preventTouch(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+
         function closeVideoPlayer() {
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
@@ -1034,19 +1069,44 @@
                 playerWrapper.innerHTML = '';
                 playerContainer.style.display = 'none';
                 
+                // Re-enable touch events
+                document.body.style.touchAction = '';
+                
                 // Exit fullscreen if we're in it
-                if (document.fullscreenElement) {
-                    document.exitFullscreen().catch(err => console.error(err));
-                } else if (document.webkitFullscreenElement) {
-                    document.webkitExitFullscreen().catch(err => console.error(err));
-                } else if (document.msFullscreenElement) {
-                    document.msExitFullscreen().catch(err => console.error(err));
-                }
+                const exitFullscreen = () => {
+                    if (document.exitFullscreen) {
+                        return document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        return document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        return document.msExitFullscreen();
+                    }
+                    return Promise.resolve();
+                };
                 
                 // Unlock screen orientation
-                if (screen.orientation && screen.orientation.unlock) {
-                    screen.orientation.unlock();
-                }
+                const unlockOrientation = () => {
+                    if (screen.orientation && screen.orientation.unlock) {
+                        return screen.orientation.unlock();
+                    } else if (screen.unlockOrientation) {
+                        // For older browsers
+                        return screen.unlockOrientation();
+                    } else if (screen.mozUnlockOrientation) {
+                        // Firefox
+                        return screen.mozUnlockOrientation();
+                    } else if (screen.msUnlockOrientation) {
+                        // MS legacy
+                        return screen.msUnlockOrientation();
+                    }
+                    return Promise.resolve();
+                };
+                
+                // First unlock orientation, then exit fullscreen
+                unlockOrientation().then(() => {
+                    return exitFullscreen();
+                }).catch(error => {
+                    console.error('Error during cleanup:', error);
+                });
                 
                 // Re-enable scrolling
                 document.body.style.overflow = '';
@@ -1055,7 +1115,10 @@
                 if (window.location.hash) {
                     history.pushState('', document.title, window.location.pathname + window.location.search);
                 }
-            }
+                
+                // Remove touch event listeners
+                document.removeEventListener('touchmove', preventTouch);
+            }    
         }
     </script>
 
