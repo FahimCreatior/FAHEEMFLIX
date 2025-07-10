@@ -927,30 +927,13 @@
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
             if (playerContainer && playerWrapper) {
-                // Save progress before closing
-                if (window.vimeoPlayer) {
-                    try {
-                        const currentTime = await window.vimeoPlayer.getCurrentTime();
-                        const duration = await window.vimeoPlayer.getDuration();
-                        const vimeoId = document.getElementById('movieDetailsPage')?.dataset.vimeoId;
-                        
-                        if (vimeoId) {
-                            saveVideoProgress(vimeoId, currentTime, duration);
-                        }
-                        
-                        // Clean up the player instance
-                        if (window.vimeoPlayer.destroy) {
-                            window.vimeoPlayer.destroy();
-                        }
-                        window.vimeoPlayer = null;
-                    } catch (error) {
-                        console.error('Error saving video progress:', error);
-                    }
-                }
-                
-                // Remove the iframe completely
+                // Clean up the existing iframe
                 playerWrapper.innerHTML = '';
                 playerContainer.style.display = 'none';
+                
+                // Reset tracking variables
+                hasUserSeeked = false;
+                lastSaveTime = 0;
                 
                 // Exit fullscreen if we're in it
                 if (document.fullscreenElement) {
@@ -994,66 +977,47 @@
             }
         }
 
-        // Save video progress to localStorage
-        function saveVideoProgress(vimeoId, currentTime, duration) {
-            if (currentTime < 10 || (currentTime / duration) > 0.9) {
-                // Don't save if less than 10 seconds or watched more than 90%
-                localStorage.removeItem(`video_${vimeoId}`);
-            } else {
-                localStorage.setItem(`video_${vimeoId}`, currentTime.toString());
-            }
-        }
-
-        // Get saved video progress from localStorage
-        function getVideoProgress(vimeoId) {
-            const progress = localStorage.getItem(`video_${vimeoId}`);
-            return progress ? parseFloat(progress) : 0;
-        }
-
-        // Initialize Vimeo player with progress tracking
-        async function initializeVimeoPlayer(vimeoId, iframe) {
-            const player = new Vimeo.Player(iframe);
-            const savedTime = getVideoProgress(vimeoId);
-            let userSeeked = false;
-
-            // Set up time update listener
-            player.on('timeupdate', async (data) => {
-                const currentTime = data.seconds;
-                const duration = await player.getDuration();
-                
-                // Only save progress if user hasn't manually sought
-                if (!userSeeked) {
-                    saveVideoProgress(vimeoId, currentTime, duration);
+        // Simple video progress tracking using localStorage
+        const videoProgress = {
+            // Save video progress
+            save: function(vimeoId, currentTime, duration) {
+                try {
+                    // Only save if watched for more than 10 seconds and less than 90%
+                    if (currentTime > 10 && (currentTime / duration) < 0.9) {
+                        localStorage.setItem(`fp_${vimeoId}`, currentTime.toString());
+                    } else if (currentTime < 5) {
+                        // If near the beginning, remove any saved progress
+                        this.clear(vimeoId);
+                    }
+                } catch (e) {
+                    console.error('Error saving video progress:', e);
                 }
-            });
-
-            // Detect manual seeking
-            player.on('seeked', (data) => {
-                userSeeked = true;
-                const currentTime = data.seconds;
-                if (currentTime < 5) {
-                    // If user seeks to near the beginning, remove saved progress
-                    localStorage.removeItem(`video_${vimeoId}`);
-                } else {
-                    // Otherwise, save the new position
-                    player.getDuration().then(duration => {
-                        saveVideoProgress(vimeoId, currentTime, duration);
-                    });
+            },
+            
+            // Get saved progress
+            get: function(vimeoId) {
+                try {
+                    const time = localStorage.getItem(`fp_${vimeoId}`);
+                    return time ? parseFloat(time) : 0;
+                } catch (e) {
+                    console.error('Error getting video progress:', e);
+                    return 0;
                 }
-            });
-
-            // Reset seek flag when user starts playing
-            player.on('play', () => {
-                userSeeked = false;
-            });
-
-            // Set initial time if there's a saved position
-            if (savedTime > 0) {
-                await player.setCurrentTime(savedTime);
+            },
+            
+            // Clear progress
+            clear: function(vimeoId) {
+                try {
+                    localStorage.removeItem(`fp_${vimeoId}`);
+                } catch (e) {
+                    console.error('Error clearing video progress:', e);
+                }
             }
-
-            return player;
-        }
+        };
+        
+        // Track if user has manually seeked
+        let hasUserSeeked = false;
+        let lastSaveTime = 0;
 
         async function playVideo() {
             const page = document.getElementById('movieDetailsPage');
@@ -1064,6 +1028,9 @@
             if (!playerContainer || !playerWrapper) return;
             
             try {
+                // Get saved time before creating the iframe
+                const savedTime = videoProgress.get(vimeoId);
+                
                 // Prevent scrolling and touch events
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
@@ -1071,8 +1038,11 @@
                 // Create and configure the iframe
                 const iframe = document.createElement('iframe');
                 iframe.id = 'vimeoPlayer';
-                // Updated URL with mobile-friendly parameters
-                iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&playsinline=1&title=0&byline=0&portrait=0&dnt=1&transparent=0&quality=1080p`;
+                
+                // Add saved time to the URL if available
+                const timeParam = savedTime > 0 ? `#t=${Math.floor(savedTime)}` : '';
+                iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&playsinline=1&title=0&byline=0&portrait=0&dnt=1&transparent=0&quality=1080p${timeParam}`;
+                
                 iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
                 iframe.setAttribute('webkit-playsinline', '1');
                 iframe.setAttribute('playsinline', '1');
@@ -1087,11 +1057,12 @@
                 playerWrapper.innerHTML = '';
                 playerWrapper.appendChild(iframe);
                 playerContainer.style.display = 'block';
-
-                // Initialize Vimeo player with progress tracking
-                if (window.Vimeo) {
-                    window.vimeoPlayer = await initializeVimeoPlayer(vimeoId, iframe);
-                }
+                
+                // Set up message listener for Vimeo player events
+                window.addEventListener('message', handleVimeoMessage);
+                
+                // Store the Vimeo iframe reference
+                window.vimeoIframe = iframe;
                 
                 // Request fullscreen
                 const requestFullscreen = () => {
@@ -1113,10 +1084,60 @@
                 
             } catch (error) {
                 console.error('Error playing video:', error);
-                // Ensure we still clean up even if there's an error
                 closeVideoPlayer();
             }
         }
+        
+        // Handle Vimeo player messages
+        function handleVimeoMessage(event) {
+            // Only process messages from our Vimeo iframe
+            if (event.source !== window.vimeoIframe?.contentWindow) return;
+            
+            try {
+                const data = JSON.parse(event.data);
+                const vimeoId = document.getElementById('movieDetailsPage')?.dataset.vimeoId;
+                
+                if (!vimeoId) return;
+                
+                // Handle play progress
+                if (data.event === 'playProgress' || data.event === 'timeupdate') {
+                    const currentTime = data.data?.seconds || 0;
+                    const duration = data.data?.duration || 0;
+                    const now = Date.now();
+                    
+                    // Only save progress every 5 seconds to reduce localStorage writes
+                    if (now - lastSaveTime > 5000 && !hasUserSeeked) {
+                        videoProgress.save(vimeoId, currentTime, duration);
+                        lastSaveTime = now;
+                    }
+                }
+                
+                // Handle seeking
+                if (data.event === 'seek') {
+                    hasUserSeeked = true;
+                    const seekTime = data.data?.seconds || 0;
+                    
+                    // If seeking to near the beginning, clear the saved progress
+                    if (seekTime < 5) {
+                        videoProgress.clear(vimeoId);
+                    }
+                }
+                
+                // Reset seek flag when video starts playing
+                if (data.event === 'play') {
+                    hasUserSeeked = false;
+                }
+                
+                // Clear progress when video ends
+                if (data.event === 'ended') {
+                    videoProgress.clear(vimeoId);
+                }
+                
+            } catch (e) {
+                console.error('Error processing Vimeo message:', e);
+            }
+        }
+        
 
         // Close the movie details page when the back button is pressed
         document.addEventListener('keydown', (e) => {
@@ -1134,17 +1155,24 @@
             }
         });
         
-        // Initialize search functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            const openSearch = document.getElementById('openSearch');
-            const closeSearch = document.getElementById('closeSearch');
-            const searchModal = document.getElementById('searchModal');
-            const searchInput = document.getElementById('movieSearchInput');
-
-            if (openSearch) openSearch.addEventListener('click', () => searchModal.style.display = 'flex');
-            if (closeSearch) closeSearch.addEventListener('click', () => searchModal.style.display = 'none');
-            if (searchInput) searchInput.focus();
-        });
+        // Search functionality
+        const searchModal = document.getElementById('searchModal');
+        const openSearch = document.getElementById('openSearch');
+        const closeSearch = document.getElementById('closeSearch');
+        const searchInput = document.getElementById('movieSearchInput');
+        
+        if (openSearch) {
+            openSearch.addEventListener('click', () => {
+                searchModal.style.display = 'flex';
+                if (searchInput) searchInput.focus();
+            });
+        }
+        
+        if (closeSearch) {
+            closeSearch.addEventListener('click', () => {
+                searchModal.style.display = 'none';
+            });
+        }
         // Close video player function
         // Prevent touch events from interfering with video playback
         function preventTouch(e) {
@@ -1265,4 +1293,91 @@
         .backdrop-overlay {
             position: absolute;
             bottom: 0;
-       
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to top, #141414 0%, transparent 100%);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .movie-details-content {
+            padding: 20px;
+            margin-top: -100px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .movie-details-meta {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            color: #999;
+        }
+        
+        .movie-details-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-play {
+            background: #e50914;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .movie-details-description {
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        
+        .movie-details-info {
+            margin-top: 20px;
+        }
+        
+        .info-row {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        
+        .info-label {
+            color: #777;
+            min-width: 80px;
+        }
+        
+        .info-value {
+            color: #fff;
+            flex: 1;
+        }
+    </style>
+</body>
+</html>
