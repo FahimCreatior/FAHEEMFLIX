@@ -950,21 +950,33 @@
         async function closeMovieDetails() {
             const page = document.getElementById('movieDetailsPage');
             
-            // First close the video player if it's open
-            await closeVideoPlayer();
-            
-            // Then close the movie details
-            page.classList.remove('active');
-            
-            // Restore body scrolling
-            document.body.style.overflow = '';
-            
-            // Force focus back to the main content for better keyboard navigation
-            const mainContent = document.querySelector('main');
-            if (mainContent) {
-                mainContent.setAttribute('tabindex', '-1');
-                mainContent.focus();
-                mainContent.removeAttribute('tabindex');
+            try {
+                // Close video player first
+                await closeVideoPlayer();
+            } catch (error) {
+                console.error('Error closing video player:', error);
+            } finally {
+                // Always remove the active class, even if video close fails
+                page.classList.remove('active');
+                
+                // Restore body scrolling and touch events
+                document.body.style.overflow = '';
+                document.body.style.touchAction = '';
+                
+                // Force a reflow to ensure the UI updates
+                void document.body.offsetHeight;
+                
+                // Re-enable scrolling on the body
+                document.body.style.overflow = 'auto';
+                document.documentElement.style.overflow = 'auto';
+                
+                // Force focus back to the main content
+                const mainContent = document.querySelector('main');
+                if (mainContent) {
+                    mainContent.setAttribute('tabindex', '-1');
+                    mainContent.focus();
+                    mainContent.removeAttribute('tabindex');
+                }
             }
         }
 
@@ -977,8 +989,10 @@
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
-            // Prevent touch events on the document while video is playing
+            // Prevent touch events and scrolling while video is playing
             document.body.style.touchAction = 'none';
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
             
             // Create new iframe for the video programmatically
             const iframe = document.createElement('iframe');
@@ -994,47 +1008,52 @@
             playerWrapper.innerHTML = '';
             playerWrapper.appendChild(iframe);
             
+            // Show the player container
             playerContainer.style.display = 'block';
+            
+            // Force a reflow to ensure the container is visible
+            void playerContainer.offsetHeight;
 
-            // Request fullscreen mode
+            // Function to request fullscreen
             const requestFullscreen = () => {
                 if (playerContainer.requestFullscreen) {
                     return playerContainer.requestFullscreen();
-                } else if (playerContainer.webkitRequestFullscreen) { // Safari
+                } else if (playerContainer.webkitRequestFullscreen) {
                     return playerContainer.webkitRequestFullscreen();
-                } else if (playerContainer.msRequestFullscreen) { // IE11
+                } else if (playerContainer.msRequestFullscreen) {
                     return playerContainer.msRequestFullscreen();
                 }
                 return Promise.resolve();
             };
 
-            // Lock orientation to landscape
+            // Function to lock orientation
             const lockOrientation = () => {
                 if (screen.orientation && screen.orientation.lock) {
-                    return screen.orientation.lock('landscape').catch(error => {
-                        console.warn('Screen orientation lock not supported or failed:', error);
-                    });
+                    return screen.orientation.lock('landscape').catch(() => {});
                 } else if (screen.lockOrientation) {
-                    // For older browsers
                     return screen.lockOrientation('landscape');
                 } else if (screen.mozLockOrientation) {
-                    // Firefox
                     return screen.mozLockOrientation('landscape');
                 } else if (screen.msLockOrientation) {
-                    // MS legacy
                     return screen.msLockOrientation('landscape');
                 }
                 return Promise.resolve();
             };
 
-            // First go fullscreen, then lock orientation
-            requestFullscreen().then(() => {
-                return lockOrientation();
-            }).catch(error => {
-                console.error('Fullscreen or orientation lock failed:', error);
-            });
+            // Go fullscreen first, then lock orientation
+            requestFullscreen()
+                .then(() => lockOrientation())
+                .catch(error => {
+                    console.warn('Fullscreen or orientation lock warning:', error);
+                });
 
-            // Prevent accidental orientation changes on touch devices
+            // Add touch event prevention
+            const preventTouch = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            };
+            
             document.addEventListener('touchmove', preventTouch, { passive: false });
         }
 
@@ -1083,28 +1102,28 @@
                     return;
                 }
                 
-                // Remove the iframe completely
-                playerWrapper.innerHTML = '';
+                // Immediately hide the player to prevent interaction
                 playerContainer.style.display = 'none';
                 
-                // Re-enable touch events
-                document.body.style.touchAction = '';
+                // Clean up the iframe
+                playerWrapper.innerHTML = '';
                 
-                // Exit fullscreen if we're in it
+                // Re-enable touch events and scrolling
+                document.body.style.touchAction = '';
+                document.body.style.overflow = 'auto';
+                document.documentElement.style.overflow = 'auto';
+                
+                // Function to safely exit fullscreen
                 const exitFullscreen = () => {
                     if (document.fullscreenElement) {
-                        if (document.exitFullscreen) {
-                            return document.exitFullscreen();
-                        } else if (document.webkitExitFullscreen) {
-                            return document.webkitExitFullscreen();
-                        } else if (document.msExitFullscreen) {
-                            return document.msExitFullscreen();
-                        }
+                        return (document.exitFullscreen || 
+                               document.webkitExitFullscreen || 
+                               document.msExitFullscreen).call(document).catch(() => {});
                     }
                     return Promise.resolve();
                 };
                 
-                // Unlock screen orientation
+                // Function to safely unlock orientation
                 const unlockOrientation = () => {
                     if (screen.orientation && screen.orientation.unlock) {
                         return screen.orientation.unlock().catch(() => {});
@@ -1118,39 +1137,31 @@
                     return Promise.resolve();
                 };
                 
-                // First unlock orientation, then exit fullscreen
-                Promise.all([
-                    unlockOrientation(),
-                    exitFullscreen()
-                ]).catch(error => {
-                    console.error('Error during cleanup:', error);
-                }).finally(() => {
-                    // Re-enable scrolling
-                    document.body.style.overflow = '';
-                    
-                    // Remove any URL fragments that might be causing issues
+                // Clean up in parallel with a timeout
+                Promise.race([
+                    Promise.all([
+                        unlockOrientation(),
+                        exitFullscreen()
+                    ]),
+                    new Promise(resolve => setTimeout(resolve, 1000)) // Max 1 second for cleanup
+                ])
+                .catch(error => {
+                    console.warn('Cleanup warning:', error);
+                })
+                .finally(() => {
+                    // Remove any URL fragments
                     if (window.location.hash) {
-                        history.pushState('', document.title, window.location.pathname + window.location.search);
+                        history.replaceState('', document.title, window.location.pathname + window.location.search);
                     }
                     
                     // Remove touch event listeners
                     document.removeEventListener('touchmove', preventTouch, { passive: false });
                     
-                    // Force a reflow to ensure the back button is clickable
-                    setTimeout(() => {
-                        const backArrow = document.querySelector('.back-arrow');
-                        if (backArrow) {
-                            const newBackArrow = backArrow.cloneNode(true);
-                            backArrow.parentNode.replaceChild(newBackArrow, backArrow);
-                            
-                            // Re-attach click handler
-                            newBackArrow.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                closeMovieDetails();
-                            });
-                        }
-                        resolve();
-                    }, 100);
+                    // Force a reflow
+                    void document.body.offsetHeight;
+                    
+                    // Resolve the promise
+                    resolve();
                 });
             });
         }
