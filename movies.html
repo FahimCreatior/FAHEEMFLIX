@@ -947,12 +947,25 @@
             }
         }
 
-        function closeMovieDetails() {
+        async function closeMovieDetails() {
             const page = document.getElementById('movieDetailsPage');
+            
+            // First close the video player if it's open
+            await closeVideoPlayer();
+            
+            // Then close the movie details
             page.classList.remove('active');
-
-            // Make sure video player is closed too
-            closeVideoPlayer();
+            
+            // Restore body scrolling
+            document.body.style.overflow = '';
+            
+            // Force focus back to the main content for better keyboard navigation
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.setAttribute('tabindex', '-1');
+                mainContent.focus();
+                mainContent.removeAttribute('tabindex');
+            }
         }
 
         function playVideo() {
@@ -1061,10 +1074,15 @@
         }
 
         function closeVideoPlayer() {
-            const playerContainer = document.getElementById('vimeoPlayerContainer');
-            const playerWrapper = document.getElementById('vimeoPlayerWrapper');
-            
-            if (playerContainer && playerWrapper) {
+            return new Promise((resolve) => {
+                const playerContainer = document.getElementById('vimeoPlayerContainer');
+                const playerWrapper = document.getElementById('vimeoPlayerWrapper');
+                
+                if (!playerContainer || !playerWrapper) {
+                    resolve();
+                    return;
+                }
+                
                 // Remove the iframe completely
                 playerWrapper.innerHTML = '';
                 playerContainer.style.display = 'none';
@@ -1074,12 +1092,14 @@
                 
                 // Exit fullscreen if we're in it
                 const exitFullscreen = () => {
-                    if (document.exitFullscreen) {
-                        return document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) {
-                        return document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        return document.msExitFullscreen();
+                    if (document.fullscreenElement) {
+                        if (document.exitFullscreen) {
+                            return document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            return document.webkitExitFullscreen();
+                        } else if (document.msExitFullscreen) {
+                            return document.msExitFullscreen();
+                        }
                     }
                     return Promise.resolve();
                 };
@@ -1087,38 +1107,52 @@
                 // Unlock screen orientation
                 const unlockOrientation = () => {
                     if (screen.orientation && screen.orientation.unlock) {
-                        return screen.orientation.unlock();
+                        return screen.orientation.unlock().catch(() => {});
                     } else if (screen.unlockOrientation) {
-                        // For older browsers
                         return screen.unlockOrientation();
                     } else if (screen.mozUnlockOrientation) {
-                        // Firefox
                         return screen.mozUnlockOrientation();
                     } else if (screen.msUnlockOrientation) {
-                        // MS legacy
                         return screen.msUnlockOrientation();
                     }
                     return Promise.resolve();
                 };
                 
                 // First unlock orientation, then exit fullscreen
-                unlockOrientation().then(() => {
-                    return exitFullscreen();
-                }).catch(error => {
+                Promise.all([
+                    unlockOrientation(),
+                    exitFullscreen()
+                ]).catch(error => {
                     console.error('Error during cleanup:', error);
+                }).finally(() => {
+                    // Re-enable scrolling
+                    document.body.style.overflow = '';
+                    
+                    // Remove any URL fragments that might be causing issues
+                    if (window.location.hash) {
+                        history.pushState('', document.title, window.location.pathname + window.location.search);
+                    }
+                    
+                    // Remove touch event listeners
+                    document.removeEventListener('touchmove', preventTouch, { passive: false });
+                    
+                    // Force a reflow to ensure the back button is clickable
+                    setTimeout(() => {
+                        const backArrow = document.querySelector('.back-arrow');
+                        if (backArrow) {
+                            const newBackArrow = backArrow.cloneNode(true);
+                            backArrow.parentNode.replaceChild(newBackArrow, backArrow);
+                            
+                            // Re-attach click handler
+                            newBackArrow.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                closeMovieDetails();
+                            });
+                        }
+                        resolve();
+                    }, 100);
                 });
-                
-                // Re-enable scrolling
-                document.body.style.overflow = '';
-                
-                // Remove any URL fragments that might be causing issues
-                if (window.location.hash) {
-                    history.pushState('', document.title, window.location.pathname + window.location.search);
-                }
-                
-                // Remove touch event listeners
-                document.removeEventListener('touchmove', preventTouch);
-            }    
+            });
         }
     </script>
 
