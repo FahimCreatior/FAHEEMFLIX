@@ -922,11 +922,32 @@
             page.classList.add('active');
         }
 
-        function closeVideoPlayer() {
+        async function closeVideoPlayer() {
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
             if (playerContainer && playerWrapper) {
+                // Save progress before closing
+                if (window.vimeoPlayer) {
+                    try {
+                        const currentTime = await window.vimeoPlayer.getCurrentTime();
+                        const duration = await window.vimeoPlayer.getDuration();
+                        const vimeoId = document.getElementById('movieDetailsPage')?.dataset.vimeoId;
+                        
+                        if (vimeoId) {
+                            saveVideoProgress(vimeoId, currentTime, duration);
+                        }
+                        
+                        // Clean up the player instance
+                        if (window.vimeoPlayer.destroy) {
+                            window.vimeoPlayer.destroy();
+                        }
+                        window.vimeoPlayer = null;
+                    } catch (error) {
+                        console.error('Error saving video progress:', error);
+                    }
+                }
+                
                 // Remove the iframe completely
                 playerWrapper.innerHTML = '';
                 playerContainer.style.display = 'none';
@@ -973,7 +994,68 @@
             }
         }
 
-        function playVideo() {
+        // Save video progress to localStorage
+        function saveVideoProgress(vimeoId, currentTime, duration) {
+            if (currentTime < 10 || (currentTime / duration) > 0.9) {
+                // Don't save if less than 10 seconds or watched more than 90%
+                localStorage.removeItem(`video_${vimeoId}`);
+            } else {
+                localStorage.setItem(`video_${vimeoId}`, currentTime.toString());
+            }
+        }
+
+        // Get saved video progress from localStorage
+        function getVideoProgress(vimeoId) {
+            const progress = localStorage.getItem(`video_${vimeoId}`);
+            return progress ? parseFloat(progress) : 0;
+        }
+
+        // Initialize Vimeo player with progress tracking
+        async function initializeVimeoPlayer(vimeoId, iframe) {
+            const player = new Vimeo.Player(iframe);
+            const savedTime = getVideoProgress(vimeoId);
+            let userSeeked = false;
+
+            // Set up time update listener
+            player.on('timeupdate', async (data) => {
+                const currentTime = data.seconds;
+                const duration = await player.getDuration();
+                
+                // Only save progress if user hasn't manually sought
+                if (!userSeeked) {
+                    saveVideoProgress(vimeoId, currentTime, duration);
+                }
+            });
+
+            // Detect manual seeking
+            player.on('seeked', (data) => {
+                userSeeked = true;
+                const currentTime = data.seconds;
+                if (currentTime < 5) {
+                    // If user seeks to near the beginning, remove saved progress
+                    localStorage.removeItem(`video_${vimeoId}`);
+                } else {
+                    // Otherwise, save the new position
+                    player.getDuration().then(duration => {
+                        saveVideoProgress(vimeoId, currentTime, duration);
+                    });
+                }
+            });
+
+            // Reset seek flag when user starts playing
+            player.on('play', () => {
+                userSeeked = false;
+            });
+
+            // Set initial time if there's a saved position
+            if (savedTime > 0) {
+                await player.setCurrentTime(savedTime);
+            }
+
+            return player;
+        }
+
+        async function playVideo() {
             const page = document.getElementById('movieDetailsPage');
             const vimeoId = page.dataset.vimeoId;
             const playerContainer = document.getElementById('vimeoPlayerContainer');
@@ -1005,6 +1087,11 @@
                 playerWrapper.innerHTML = '';
                 playerWrapper.appendChild(iframe);
                 playerContainer.style.display = 'block';
+
+                // Initialize Vimeo player with progress tracking
+                if (window.Vimeo) {
+                    window.vimeoPlayer = await initializeVimeoPlayer(vimeoId, iframe);
+                }
                 
                 // Request fullscreen
                 const requestFullscreen = () => {
@@ -1178,91 +1265,4 @@
         .backdrop-overlay {
             position: absolute;
             bottom: 0;
-            left: 0;
-            right: 0;
-            height: 100%;
-            background: linear-gradient(to top, #141414 0%, transparent 100%);
-        }
-        
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            z-index: 2;
-        }
-        
-        .movie-details-content {
-            padding: 20px;
-            margin-top: -100px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .movie-details-meta {
-            display: flex;
-            gap: 15px;
-            margin: 10px 0;
-            color: #999;
-        }
-        
-        .movie-details-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-play {
-            background: #e50914;
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-        
-        .movie-details-description {
-            margin: 20px 0;
-            line-height: 1.5;
-        }
-        
-        .movie-details-info {
-            margin-top: 20px;
-        }
-        
-        .info-row {
-            margin-bottom: 10px;
-            display: flex;
-        }
-        
-        .info-label {
-            color: #777;
-            min-width: 80px;
-        }
-        
-        .info-value {
-            color: #fff;
-            flex: 1;
-        }
-    </style>
-</body>
-</html>
+       
