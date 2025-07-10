@@ -675,16 +675,6 @@
 
         .footer-brand {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        @media (max-width: 768px) {
-            .footer-brand {
-                align-items: center;
-                text-align: center;
-            }
         }
 
         .footer-logo {
@@ -756,101 +746,19 @@
             text-align: center;
             padding-top: 2rem;
         }
-
-        /* Hamburger Menu Styles */
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            z-index: 1000;
-        }
-
-        .nav-menu {
-            display: none;
-            opacity: 0;
-            transform: translateX(100%);
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            transition: all 0.3s ease;
-        }
-
-        .nav-menu li a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            display: block;
-            transition: color 0.3s ease;
-        }
-
-        .nav-menu li a:hover {
-            color: #e50914;
-        }
-
-        @media (min-width: 769px) {
-            .nav-menu {
-                display: flex !important;
-                opacity: 1 !important;
-                transform: none !important;
-                position: static;
-                width: auto;
-                height: auto;
-                background: transparent;
-                flex-direction: row;
-                padding: 0;
-                box-shadow: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: block;
-            }
-
-            .nav-menu {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 250px;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.98);
-                flex-direction: column;
-                padding: 5rem 1rem 1rem;
-                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-                z-index: 999;
-                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            }
-
-            .nav-menu.active {
-                right: 0;
-            }
-
-            .nav-menu li {
-                margin: 1rem 0;
-            }
-
-            .search-container {
-                margin-left: auto;
-                margin-right: 1rem;
-            }
-        }
     </style>
 </head>
 <body>
     <header class="header">
         <a href="#" class="logo">FAHEEMFLIX</a>
-        <button class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </button>
         <nav>
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#">Home</a></li>
                 <li><a href="movies.html">Movies</a></li>
-                <li><a href="#">TV Shows</a></li>
+                <li><a href="series.html">TV Shows</a></li>
                 <li><a href="#">My List</a></li>
             </ul>
         </nav>
@@ -937,7 +845,7 @@
                         <ul>
                             <li><a href="#">Home</a></li>
                             <li><a href="movies.html">Movies</a></li>
-                            <li><a href="#">TV Shows</a></li>
+                            <li><a href="series.html">TV Shows</a></li>
                             <li><a href="#">My List</a></li>
                         </ul>
                     </div>
@@ -988,81 +896,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-        // Toggle mobile menu
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menuToggle');
-            const navMenu = document.getElementById('navMenu');
-            
-            // Show/hide menu on toggle button click
-            menuToggle.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent event from bubbling to document
-                const isActive = navMenu.classList.toggle('active');
-                
-                if (isActive) {
-                    navMenu.style.display = 'flex';
-                    // Trigger reflow
-                    void navMenu.offsetWidth;
-                    navMenu.style.opacity = '1';
-                    navMenu.style.transform = 'translateX(0)';
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    navMenu.style.opacity = '0';
-                    navMenu.style.transform = 'translateX(100%)';
-                    // Wait for transition to complete before hiding
-                    setTimeout(() => {
-                        if (!navMenu.classList.contains('active')) {
-                            navMenu.style.display = 'none';
-                        }
-                    }, 300);
-                    document.body.style.overflow = '';
-                }
-            });
-            
-            // Close menu when clicking on a link
-            const navLinks = document.querySelectorAll('.nav-menu a');
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    navMenu.classList.remove('active');
-                    navMenu.style.opacity = '0';
-                    navMenu.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        navMenu.style.display = 'none';
-                    }, 300);
-                    document.body.style.overflow = '';
-                });
-            });
-            
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 768 && navMenu.classList.contains('active') && 
-                    !navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
-                    navMenu.classList.remove('active');
-                    navMenu.style.opacity = '0';
-                    navMenu.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        navMenu.style.display = 'none';
-                    }, 300);
-                    document.body.style.overflow = '';
-                }
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth > 768) {
-                    // Reset styles on desktop
-                    navMenu.style.display = '';
-                    navMenu.style.opacity = '';
-                    navMenu.style.transform = '';
-                    document.body.style.overflow = '';
-                } else if (!navMenu.classList.contains('active')) {
-                    // Ensure menu is hidden on mobile if not active
-                    navMenu.style.display = 'none';
-                }
-            });
-        });
-    </script>
 
     <script type="module">
         import config from './config.js';
@@ -1745,33 +1578,5 @@
             }
         }
     </style>
-    <!-- Add this script to your index.html before the closing </body> tag -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://mhmlywpwgciwiwbwsddf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1obWx5d3B3Z2Npd2l3YndzZGRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzNzQwOTIsImV4cCI6MjA2NDk1MDA5Mn0.FRn-T36IhmD-Igc3eOxkJY3wlS6baqZbllcVw-EEO0U';
-    
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Check auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!session) {
-            // Redirect to login if not authenticated
-            window.location.href = 'login.html';
-        }
-    });
-    
-    // Add logout functionality
-    async function signOut() {
-        const { error } = await supabase.auth.signOut();
-        if (!error) {
-            window.location.href = 'login.html';
-        }
-    }
-    
-    // Add this to your navigation menu
-    // <button onclick="signOut()">Sign Out</button>
-</script>
-
 </body>
 </html>
