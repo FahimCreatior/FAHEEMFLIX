@@ -950,111 +950,80 @@
         async function closeMovieDetails() {
             const page = document.getElementById('movieDetailsPage');
             
-            try {
-                // Close video player first
-                await closeVideoPlayer();
-            } catch (error) {
-                console.error('Error closing video player:', error);
-            } finally {
-                // Always remove the active class, even if video close fails
-                page.classList.remove('active');
-                
-                // Restore body scrolling and touch events
-                document.body.style.overflow = '';
-                document.body.style.touchAction = '';
-                
-                // Force a reflow to ensure the UI updates
-                void document.body.offsetHeight;
-                
-                // Re-enable scrolling on the body
-                document.body.style.overflow = 'auto';
-                document.documentElement.style.overflow = 'auto';
-                
-                // Force focus back to the main content
-                const mainContent = document.querySelector('main');
-                if (mainContent) {
-                    mainContent.setAttribute('tabindex', '-1');
-                    mainContent.focus();
-                    mainContent.removeAttribute('tabindex');
-                }
+            // Close video player first (synchronously)
+            closeVideoPlayer();
+            
+            // Remove active class
+            page.classList.remove('active');
+            
+            // Restore body scrolling and touch events
+            document.body.style.overflow = 'auto';
+            document.body.style.touchAction = 'auto';
+            document.documentElement.style.overflow = 'auto';
+            
+            // Force a reflow
+            void document.body.offsetHeight;
+            
+            // Focus back to main content
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.setAttribute('tabindex', '-1');
+                mainContent.focus();
+                mainContent.removeAttribute('tabindex');
             }
         }
 
         function playVideo() {
-            // Get the current movie's Vimeo ID
             const page = document.getElementById('movieDetailsPage');
             const vimeoId = page.dataset.vimeoId;
-            
-            // Show the Vimeo player container
             const playerContainer = document.getElementById('vimeoPlayerContainer');
             const playerWrapper = document.getElementById('vimeoPlayerWrapper');
             
-            // Prevent touch events and scrolling while video is playing
-            document.body.style.touchAction = 'none';
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
+            if (!playerContainer || !playerWrapper) return;
             
-            // Create new iframe for the video programmatically
-            const iframe = document.createElement('iframe');
-            iframe.id = 'vimeoPlayer';
-            iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=0&title=0&byline=0&portrait=0`;
-            iframe.allow = 'autoplay; fullscreen; picture-in-picture';
-            iframe.allowFullscreen = true;
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            
-            // Clear any existing iframe and add the new one
-            playerWrapper.innerHTML = '';
-            playerWrapper.appendChild(iframe);
-            
-            // Show the player container
-            playerContainer.style.display = 'block';
-            
-            // Force a reflow to ensure the container is visible
-            void playerContainer.offsetHeight;
-
-            // Function to request fullscreen
-            const requestFullscreen = () => {
-                if (playerContainer.requestFullscreen) {
-                    return playerContainer.requestFullscreen();
-                } else if (playerContainer.webkitRequestFullscreen) {
-                    return playerContainer.webkitRequestFullscreen();
-                } else if (playerContainer.msRequestFullscreen) {
-                    return playerContainer.msRequestFullscreen();
-                }
-                return Promise.resolve();
-            };
-
-            // Function to lock orientation
-            const lockOrientation = () => {
-                if (screen.orientation && screen.orientation.lock) {
-                    return screen.orientation.lock('landscape').catch(() => {});
-                } else if (screen.lockOrientation) {
-                    return screen.lockOrientation('landscape');
-                } else if (screen.mozLockOrientation) {
-                    return screen.mozLockOrientation('landscape');
-                } else if (screen.msLockOrientation) {
-                    return screen.msLockOrientation('landscape');
-                }
-                return Promise.resolve();
-            };
-
-            // Go fullscreen first, then lock orientation
-            requestFullscreen()
-                .then(() => lockOrientation())
-                .catch(error => {
-                    console.warn('Fullscreen or orientation lock warning:', error);
-                });
-
-            // Add touch event prevention
-            const preventTouch = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            };
-            
-            document.addEventListener('touchmove', preventTouch, { passive: false });
+            try {
+                // Prevent scrolling and touch events
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+                
+                // Create and configure the iframe
+                const iframe = document.createElement('iframe');
+                iframe.id = 'vimeoPlayer';
+                iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=0&title=0&byline=0&portrait=0`;
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                
+                // Clear and show the player
+                playerWrapper.innerHTML = '';
+                playerWrapper.appendChild(iframe);
+                playerContainer.style.display = 'block';
+                
+                // Request fullscreen
+                const requestFullscreen = () => {
+                    const el = playerContainer;
+                    return (el.requestFullscreen || 
+                           el.webkitRequestFullscreen || 
+                           el.msRequestFullscreen).call(el);
+                };
+                
+                // Lock orientation if possible
+                const lockOrientation = () => {
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch(() => {});
+                    }
+                };
+                
+                // Go fullscreen first, then lock orientation
+                requestFullscreen().then(lockOrientation).catch(console.warn);
+                
+            } catch (error) {
+                console.error('Error playing video:', error);
+                // Ensure we still clean up even if there's an error
+                closeVideoPlayer();
+            }
         }
 
         // Close the movie details page when the back button is pressed
@@ -1093,77 +1062,46 @@
         }
 
         function closeVideoPlayer() {
-            return new Promise((resolve) => {
-                const playerContainer = document.getElementById('vimeoPlayerContainer');
-                const playerWrapper = document.getElementById('vimeoPlayerWrapper');
-                
-                if (!playerContainer || !playerWrapper) {
-                    resolve();
-                    return;
-                }
-                
-                // Immediately hide the player to prevent interaction
+            const playerContainer = document.getElementById('vimeoPlayerContainer');
+            const playerWrapper = document.getElementById('vimeoPlayerWrapper');
+            
+            if (!playerContainer || !playerWrapper) return;
+            
+            try {
+                // Immediately hide the player
                 playerContainer.style.display = 'none';
                 
-                // Clean up the iframe
+                // Clear the iframe
                 playerWrapper.innerHTML = '';
                 
-                // Re-enable touch events and scrolling
-                document.body.style.touchAction = '';
+                // Exit fullscreen if needed
+                if (document.fullscreenElement) {
+                    (document.exitFullscreen || 
+                     document.webkitExitFullscreen || 
+                     document.msExitFullscreen).call(document).catch(() => {});
+                }
+                
+                // Unlock orientation
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock().catch(() => {});
+                }
+                
+            } catch (error) {
+                console.warn('Error during video player cleanup:', error);
+            } finally {
+                // Always restore these states
                 document.body.style.overflow = 'auto';
+                document.body.style.touchAction = 'auto';
                 document.documentElement.style.overflow = 'auto';
                 
-                // Function to safely exit fullscreen
-                const exitFullscreen = () => {
-                    if (document.fullscreenElement) {
-                        return (document.exitFullscreen || 
-                               document.webkitExitFullscreen || 
-                               document.msExitFullscreen).call(document).catch(() => {});
-                    }
-                    return Promise.resolve();
-                };
+                // Remove any URL fragments
+                if (window.location.hash) {
+                    history.replaceState('', document.title, window.location.pathname + window.location.search);
+                }
                 
-                // Function to safely unlock orientation
-                const unlockOrientation = () => {
-                    if (screen.orientation && screen.orientation.unlock) {
-                        return screen.orientation.unlock().catch(() => {});
-                    } else if (screen.unlockOrientation) {
-                        return screen.unlockOrientation();
-                    } else if (screen.mozUnlockOrientation) {
-                        return screen.mozUnlockOrientation();
-                    } else if (screen.msUnlockOrientation) {
-                        return screen.msUnlockOrientation();
-                    }
-                    return Promise.resolve();
-                };
-                
-                // Clean up in parallel with a timeout
-                Promise.race([
-                    Promise.all([
-                        unlockOrientation(),
-                        exitFullscreen()
-                    ]),
-                    new Promise(resolve => setTimeout(resolve, 1000)) // Max 1 second for cleanup
-                ])
-                .catch(error => {
-                    console.warn('Cleanup warning:', error);
-                })
-                .finally(() => {
-                    // Remove any URL fragments
-                    if (window.location.hash) {
-                        history.replaceState('', document.title, window.location.pathname + window.location.search);
-                    }
-                    
-                    // Remove touch event listeners
-                    document.removeEventListener('touchmove', preventTouch, { passive: false });
-                    
-                    // Force a reflow
-                    void document.body.offsetHeight;
-                    
-                    // Resolve the promise
-                    resolve();
-                });
-            });
+                // Force a reflow
+                void document.body.offsetHeight;
+            }
         }
     </script>
 
