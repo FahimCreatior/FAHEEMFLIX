@@ -989,12 +989,17 @@
                 // Create and configure the iframe
                 const iframe = document.createElement('iframe');
                 iframe.id = 'vimeoPlayer';
-                iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=0&title=0&byline=0&portrait=0`;
-                iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                // Updated URL with mobile-friendly parameters
+                iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&playsinline=1&title=0&byline=0&portrait=0&dnt=1&transparent=0&quality=1080p`;
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+                iframe.setAttribute('webkit-playsinline', '1');
+                iframe.setAttribute('playsinline', '1');
                 iframe.allowFullscreen = true;
                 iframe.style.width = '100%';
                 iframe.style.height = '100%';
                 iframe.style.border = 'none';
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowfullscreen', '');
                 
                 // Clear and show the player
                 playerWrapper.innerHTML = '';
