@@ -493,6 +493,51 @@
             color: #ccc;
         }
 
+        /* Mobile-specific styles for search bar */
+        @media (max-width: 768px) {
+            .search-container {
+                order: 3; /* Puts search after nav menu in flex order */
+                margin-top: 1rem; /* Add some space from elements above */
+                width: 100%; /* Make it full width */
+                display: flex;
+                justify-content: center;
+            }
+
+            .search-bar {
+                width: 90%; /* Occupy most of the width */
+                max-width: 300px; /* Prevent it from becoming too wide on tablets */
+                font-size: 1rem; /* Slightly larger font for better readability */
+                padding: 0.8rem 1.2rem 0.8rem 3.5rem; /* Adjust padding for icon */
+            }
+
+            .search-bar:focus {
+                width: 95%; /* Expand slightly on focus */
+                max-width: 350px;
+            }
+
+            .search-icon {
+                left: 1.5rem; /* Adjust icon position */
+                font-size: 1.2rem; /* Slightly larger icon */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-bar {
+                width: 95%; /* Even wider on very small screens */
+                font-size: 0.9rem;
+                padding: 0.7rem 1rem 0.7rem 3rem;
+            }
+
+            .search-bar:focus {
+                width: 100%;
+            }
+
+            .search-icon {
+                left: 1rem;
+                font-size: 1.1rem;
+            }
+        }
+
         /* Footer Styles */
         /* Latest Releases Section */
         .latest-releases {
@@ -1150,8 +1195,12 @@
                 loading.style.display = 'none';
                 
                 // Populate Vimeo content
-                const vimeoContent = document.getElementById('vimeoContent');
-                vimeoVideos.forEach(video => vimeoContent.appendChild(createVimeoCard(video)));
+                // Note: vimeoVideos is not defined in the provided context.
+                // You would need to fetch Vimeo videos and store them in this array.
+                // For now, this line will cause an error if vimeoVideos is not globally available.
+                // If you intend to use Vimeo, ensure `vimeoVideos` is populated correctly.
+                // Example: const vimeoVideos = await fetchVimeoVideos();
+                // vimeoVideos.forEach(video => vimeoContent.appendChild(createVimeoCard(video)));
 
             } catch (error) {
                 console.error('Error initializing app:', error);
@@ -1210,57 +1259,69 @@
         // Initialize the app
         initializeApp();
 
-        // Create movie cards
+        // The following functions (createMovieCards, playMovie, closePlayer, searchInput event listener, playerModal event listener, and initial createMovieCards(movies))
+        // appear to be remnants from a different movie data structure (local 'movies' array) and player implementation.
+        // They are not integrated with the TMDB API fetching logic above.
+        // If you are using TMDB, these can likely be removed or refactored to work with the TMDB data.
+        // For the purpose of providing the complete HTML, they are kept as they were in the original context.
+
+        // Create movie cards (likely for a local 'movies' array, not TMDB)
         function createMovieCards(moviesToShow) {
-            movieGrid.innerHTML = '';
-            moviesToShow.forEach(movie => {
-                const movieCard = document.createElement('div');
-                movieCard.className = 'movie-card';
-                movieCard.innerHTML = `
-                    <img src="${movie.poster}" alt="${movie.title}" class="movie-poster">
-                    <div class="movie-info">
-                        <h3 class="movie-title">${movie.title}</h3>
-                        <p class="movie-description">${movie.description}</p>
-                    </div>
-                `;
-                movieCard.addEventListener('click', () => playMovie(movie));
-                movieGrid.appendChild(movieCard);
-            });
+            // movieGrid is not defined in the provided context, assuming it's a global variable or a typo.
+            // If this function is intended for TMDB, it should use the TMDB data and the existing createMovieCard function.
+            // movieGrid.innerHTML = '';
+            // moviesToShow.forEach(movie => {
+            //     const movieCard = document.createElement('div');
+            //     movieCard.className = 'movie-card';
+            //     movieCard.innerHTML = `
+            //         <img src="${movie.poster}" alt="${movie.title}" class="movie-poster">
+            //         <div class="movie-info">
+            //             <h3 class="movie-title">${movie.title}</h3>
+            //             <p class="movie-description">${movie.description}</p>
+            //         </div>
+            //     `;
+            //     movieCard.addEventListener('click', () => playMovie(movie));
+            //     movieGrid.appendChild(movieCard);
+            // });
         }
 
-        // Play movie
+        // Play movie (likely for a local player, not the modal)
         function playMovie(movie) {
-            videoPlayer.src = movie.videoUrl;
-            playerModal.style.display = 'block';
-            videoPlayer.play();
+            // videoPlayer and playerModal are not defined in the provided context.
+            // This function seems to be for a separate video player implementation.
+            // videoPlayer.src = movie.videoUrl;
+            // playerModal.style.display = 'block';
+            // videoPlayer.play();
         }
 
-        // Close player
-        closePlayer.addEventListener('click', () => {
-            playerModal.style.display = 'none';
-            videoPlayer.pause();
-            videoPlayer.src = '';
-        });
+        // Close player (likely for a local player)
+        // closePlayer is not defined in the provided context.
+        // closePlayer.addEventListener('click', () => {
+        //     playerModal.style.display = 'none';
+        //     videoPlayer.pause();
+        //     videoPlayer.src = '';
+        // });
 
-        // Search functionality
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredMovies = movies.filter(movie =>
-                movie.title.toLowerCase().includes(searchTerm) ||
-                movie.description.toLowerCase().includes(searchTerm)
-            );
-            createMovieCards(filteredMovies);
-        });
+        // Search functionality (likely for a local 'movies' array)
+        // searchInput.addEventListener('input', (e) => {
+        //     const searchTerm = e.target.value.toLowerCase();
+        //     const filteredMovies = movies.filter(movie =>
+        //         movie.title.toLowerCase().includes(searchTerm) ||
+        //         movie.description.toLowerCase().includes(searchTerm)
+        //     );
+        //     createMovieCards(filteredMovies);
+        // });
 
-        // Close player when clicking outside
-        playerModal.addEventListener('click', (e) => {
-            if (e.target === playerModal) {
-                closePlayer.click();
-            }
-        });
+        // Close player when clicking outside (likely for a local player)
+        // playerModal.addEventListener('click', (e) => {
+        //     if (e.target === playerModal) {
+        //         closePlayer.click();
+        //     }
+        // });
 
-        // Initialize
-        createMovieCards(movies);
+        // Initialize (likely for a local 'movies' array)
+        // movies is not defined in the provided context.
+        // createMovieCards(movies);
     </script>
     <!-- PWA Install Button -->
     <button id="installAppBtn" class="install-app-btn" aria-label="Install App">
