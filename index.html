@@ -459,7 +459,8 @@
         }
 
         .search-bar {
-            padding: 0.8rem 1.2rem 0.8rem 3rem;
+            /* Adjusted padding-left to ensure text is visible */
+            padding: 0.8rem 1.2rem 0.8rem 3.5rem; 
             border: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
@@ -481,7 +482,7 @@
             top: 50%;
             transform: translateY(-50%);
             color: #aaa;
-            pointer-events: none;
+            pointer-events: none; /* Important to allow clicks *through* the icon to the input */
             transition: color 0.3s ease;
         }
 
@@ -507,7 +508,8 @@
                 width: 90%; /* Occupy most of the width */
                 max-width: 300px; /* Prevent it from becoming too wide on tablets */
                 font-size: 1rem; /* Slightly larger font for better readability */
-                padding: 0.8rem 1.2rem 0.8rem 3.5rem; /* Adjust padding for icon */
+                /* Ensure padding is sufficient for mobile too */
+                padding: 0.8rem 1.2rem 0.8rem 3.5rem; /* Consistent with desktop for clarity */
             }
 
             .search-bar:focus {
@@ -516,8 +518,8 @@
             }
 
             .search-icon {
-                left: 1.5rem; /* Adjust icon position */
-                font-size: 1.2rem; /* Slightly larger icon */
+                left: 1.5rem; /* Keep icon position for mobile */
+                font-size: 1.2rem;
             }
         }
 
@@ -525,7 +527,8 @@
             .search-bar {
                 width: 95%; /* Even wider on very small screens */
                 font-size: 0.9rem;
-                padding: 0.7rem 1rem 0.7rem 3rem;
+                /* Ensure padding is sufficient for very small screens */
+                padding: 0.7rem 1rem 0.7rem 3rem; /* Adjusted for smaller screens */
             }
 
             .search-bar:focus {
@@ -1262,7 +1265,6 @@
         // The following functions (createMovieCards, playMovie, closePlayer, searchInput event listener, playerModal event listener, and initial createMovieCards(movies))
         // appear to be remnants from a different movie data structure (local 'movies' array) and player implementation.
         // They are not integrated with the TMDB API fetching logic above.
-        // If you are using TMDB, these can likely be removed or refactored to work with the TMDB data.
         // For the purpose of providing the complete HTML, they are kept as they were in the original context.
 
         // Create movie cards (likely for a local 'movies' array, not TMDB)
