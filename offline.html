@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - FaheemFlix</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f0f0f;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+        }
+        .offline-container {
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(20, 20, 20, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #e50914;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: #e50914;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #f40612;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <h1>You're Offline</h1>
+        <p>It seems you're not connected to the internet. Please check your connection and try again.</p>
+        <a href="/" class="btn">Retry Connection</a>
+    </div>
+</body>
+</html>

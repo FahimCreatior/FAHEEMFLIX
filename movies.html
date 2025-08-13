@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAHEEMZFLIX - Movies</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://player.vimeo.com/api/player.js"></script>
+    <!-- TMDB API Integration -->
+    <script src="js/tmdb.js"></script>
+    <style>
+        /* Search Modal Styles */
+        .search-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .search-modal.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .search-modal-content {
+            width: 90%;
+            max-width: 800px;
+            margin: 100px auto 0;
+            background: #141414;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .search-header {
+            display: flex;
+            padding: 15px;
+            background: #1f1f1f;
+            border-bottom: 1px solid #333;
+        }
+
+        #movieSearchInput {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            background: #333;
+            color: white;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .close-search {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0 10px;
+        }
+
+        .search-results {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .search-result-item {
+            display: flex;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #1f1f1f;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #333;
+        }
+
+        .search-result-item img {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+        }
+
+        .search-result-info p {
+            margin: 5px 0;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .search-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-button:hover {
+            color: #e50914;
+        }
+
+        @media (max-width: 768px) {
+            .search-modal-content {
+                width: 95%;
+                margin: 60px auto 0;
+            }
+
+            .search-header {
+                padding: 10px;
+            }
+
+            #movieSearchInput {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .search-result-item {
+                padding: 8px;
+            }
+
+            .search-result-item img {
+                width: 50px;
+                height: 75px;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #141414;
+            color: #ffffff;
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+
+        .header {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, transparent);
+            padding: 0.8rem 4%;
+            position: fixed;
+            width: 100%;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.5s ease;
+            height: 68px;
+        }
+        
+        .header.scrolled {
+            background: #141414;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.8);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+        }
+
+        .main-nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            padding: 0.5rem 1rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #b3b3b3;
+        }
+
+        .nav-link.active {
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 1rem;
+            right: 1rem;
+            height: 2px;
+            background: #e50914;
+        }
+
+        .logo {
+            color: #e50914;
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            letter-spacing: -1px;
+            margin-right: 25px;
+        }
+
+        .main-content {
+            padding: 80px 4% 40px;
+            min-height: 100vh;
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+            max-width: 94%;
+            margin: 0 auto;
+            padding: 0 0 40px;
+        }
+
+        .movie-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            background: #2f2f2f;
+            aspect-ratio: 2/3;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05) translateY(-10px);
+            z-index: 5;
+        }
+        
+        .movie-card:hover .movie-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .movie-thumbnail img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .movie-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: linear-gradient(to top, #000000cc, transparent);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .movie-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-duration {
+            font-size: 0.8rem;
+            color: #d2d2d2;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .movie-details-page {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            height: 100%;
+            background: #141414;
+            color: white;
+            z-index: 200;
+            overflow-y: auto;
+            transition: right 0.4s ease;
+            padding-top: 68px;
+        }
+
+        .movie-details-page.active {
+            right: 0;
+        }
+
+        .movie-details-header {
+            position: relative;
+            width: 100%;
+            height: 56.25vw;
+            max-height: 80vh;
+            min-height: 400px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .movie-details-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), #141414);
+        }
+
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 300;
+        }
+
+        .back-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .movie-details-content {
+            padding: 2rem 4%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .movie-details-title {
+            font-size: 3vw;
+            font-weight: 700;
+            margin-bottom: 1.2vw;
+            line-height: 1.1;
+        }
+
+        .movie-details-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5vw;
+            color: #46d369;
+            font-weight: 500;
+            font-size: 1.2vw;
+        }
+
+        .movie-details-meta span {
+            background: #333;
+            padding: 0.3rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .movie-details-description {
+            margin: 1.5rem 0;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            color: #e5e5e5;
+        }
+
+        .movie-details-buttons {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .btn {
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #e50914;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #f40612;
+        }
+        
+        .btn-secondary {
+            background: rgba(109, 109, 110, 0.7);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(109, 109, 110, 0.4);
+        }
+
+        .movie-details-buttons button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .movie-details-cast, .movie-details-director {
+            margin-bottom: 0.8rem;
+            color: #777;
+            font-size: 0.95rem;
+        }
+
+        .movie-details-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        .movie-details-footer {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 2rem;
+            font-size: 1rem;
+            color: #aaa;
+        }
+
+        .movie-details-footer div {
+            text-align: center;
+        }
+
+        /* Category Sections */
+        .category-section {
+            margin-bottom: 3rem;
+        }
+
+        .category-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 1rem;
+            padding: 0;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #e50914;
+            border-radius: 2px;
+        }
+
+        /* Movie Cards */
+        .movie-card {
+            position: relative;
+            width: 200px;
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .movie-thumbnail {
+            position: relative;
+            padding-top: 150%;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .movie-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .play-button {
+            opacity: 1;
+        }
+
+        .play-button i {
+            color: white;
+            font-size: 1.5rem;
+            margin-left: 3px;
+        }
+
+        .movie-info {
+            padding: 10px 0;
+        }
+
+        .movie-title {
+            color: white;
+            font-size: 0.9rem;
+            margin: 0 0 5px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-meta {
+            display: flex;
+            gap: 8px;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* Movies Grid */
+        .movies-grid {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 1rem 1rem;
+            gap: 15px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .movies-grid::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+    </style>
+</head>
+<body>
+    <!-- Search Modal -->
+    <div id="searchModal" class="search-modal">
+        <div class="search-modal-content">
+            <div class="search-header">
+                <input type="text" id="movieSearchInput" placeholder="Search for movies..." autocomplete="off">
+                <button class="close-search" id="closeSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="search-results" id="searchResults">
+                <!-- Search results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo">FAHEEMFLIX</a>
+            <nav class="main-nav">
+                <button id="openSearch" class="search-button" aria-label="Search movies">
+                    <i class="fas fa-search"></i>
+                </button>
+                <a href="movies.html" class="nav-link active">
+                    <i class="fas fa-film"></i> Movies
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Vimeo Player Container -->
+    <div id="vimeoPlayerContainer">
+        <div class="video-back-arrow" onclick="closeVideoPlayer()">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+        <div id="vimeoPlayerWrapper"></div>
+    </div>
+
+    <style>
+        #vimeoPlayerContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        #vimeoPlayerWrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1200px;
+            height: 0;
+            padding-bottom: 50.625%; /* 16:9 Aspect Ratio (9 / 16 = 0.5625) */
+        }
+
+        #vimeoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-back-arrow {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.3s ease;
+        }
+
+        .video-back-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+
+    <main class="main-content">
+        <!-- Continue Watching Section -->
+        <section class="category-section">
+            <h2 class="category-title">Continue Watching</h2>
+            <div class="movies-grid continue-watching">
+                <!-- Card #1 -->
+                <div class="movie-card" onclick="showMovieDetails('Bride Hard', 'https://image.tmdb.org/t/p/w500/3mExdWLSxAiUCb4NMcYmxSkO7n4.jpg', '13', '2025', '1 hour 45 min', 'Sam is a secret agent whose toughest mission to date is pleasing her bride-to-be best friend at a lavish destination wedding. When a team of mercenaries crashes the party and takes the guests hostage, Sam is thrown into a fight unlike any before — one where she can’t risk blowing her cover or ruining the big day. As she takes on the bad guys in a high-stakes battle disguised as a fairy-tale affair, she realizes the real threat might be closer than she thinks.', 'Rebel Wilson (as Sam, a secret agent turned maid of honor), Anna Camp, Anna Chlumsky, Da’Vine Joy Randolph, Gigi Zumbado, Stephen Dorff, Justin Hartley', 'Simon West', '1102904999')">
+                    <div class="movie-thumbnail">
+                        <img src="https://image.tmdb.org/t/p/w500/3mExdWLSxAiUCb4NMcYmxSkO7n4.jpg" alt="Bride Hard">
+                        <div class="play-button"><i class="fas fa-play"></i></div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">Bride Hard</h3>
+                        <div class="movie-meta">
+                            <span class="movie-rating">13</span>
+                            <span class="movie-year">2025</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card #2 -->
+                <div class="movie-card" onclick="showMovieDetails('Almost Cops', 'https://image.tmdb.org/t/p/w500/7bcndiaTgu1Kj5a6qyCmsWYdtI.jpg', 'PG-13', '2025', '1 h 35 m', 'When an overeager community officer and a reckless ex-detective are forced to team up, plenty of chaos ensues on the streets of Rotterdam.', 'Gonzalo Fernández Carmona', '1102909740')">
+                    <div class="movie-thumbnail">
+                        <img src="https://image.tmdb.org/t/p/w500/7bcndiaTgu1Kj5a6qyCmsWYdtI.jpg" alt="Almost Cops">
+                        <div class="play-button"><i class="fas fa-play"></i></div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">Almost Cops</h3>
+                        <div class="movie-meta">
+                            <span class="movie-rating">PG-13</span>
+                            <span class="movie-year">2025</span>
+                            <span class="movie-genre">Action Comedy Mystery</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card #3 -->
+                <div class="movie-card" onclick="showMovieDetails('Den of Thieves 2: Pantera', 'https://image.tmdb.org/t/p/w500/rxcyxxarD17xMliStDEhM6y2AYQ.jpg', 'R', '2025', '2h 24m', 'Big Nick tracks Donnie from the U.S. to Europe, infiltrating the Panther gang tied to the 2003 Antwerp diamond heist. Together they plot a high-stakes heist targeting the World Diamond Center in Nice, while Nick walks a fine line between cop and criminal.', 'Gerard Butler (Big Nick), O\'Shea Jackson Jr. (Donnie Wilson), Evin Ahmad, Salvatore Esposito, Meadow Williams, Swen Temmel', 'Christian Gudegast', '1102902901')">
+                    <div class="movie-thumbnail">
+                        <img src="https://image.tmdb.org/t/p/w500/rxcyxxarD17xMliStDEhM6y2AYQ.jpg" alt="Den of Thieves 2: Pantera">
+                        <div class="play-button"><i class="fas fa-play"></i></div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">Den of Thieves 2: Pantera</h3>
+                        <div class="movie-meta">
+                            <span class="movie-rating">R</span>
+                            <span class="movie-year">2025</span>
+                            <span class="movie-genre">Action • Crime • Thriller</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Movies Section -->
+        <section class="category-section">
+            <h2 class="category-title">Popular on FAHEEMFLIX</h2>
+            <div class="movies-grid">
+            <div class="movie-card" onclick="showMovieDetails('A Night In 2005', 'https://i.ibb.co/0p8F9vd9/A-Night-in-2005.jpg', '18', '2024', '1h 50m', 'What started out as a fun night at a prom after party in 2005, quickly turns into Ife&apos;s worst nightmare. She carries a dark secret from that night into adulthood that continues to plague her everyday life.', 'Cast details not provided', 'Director not provided', '1100007450')">
+                <div class="movie-thumbnail">
+                    <img src="https://i.ibb.co/0p8F9vd9/A-Night-in-2005.jpg" alt="A Night In 2005">
+                    <div class="play-button"><i class="fas fa-play"></i></div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title">A Night In 2005</h3>
+                    <div class="movie-meta">
+                        <span class="movie-rating">18</span>
+                        <span class="movie-year">2024</span>
+                        <span class="movie-duration">1h 50m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card #2 -->
+            <div class="movie-card" onclick="showMovieDetails('Dark Nuns', 'https://i.ibb.co/tTW30rWS/Dark-Nuns.jpg', 'PG-13', '2025', '1h 54m', 'Two nuns defy Church protocol to perform an exorcism on Hee‑joon, a young boy possessed by a powerful spirit. Sister Junia, terminally ill but unwavering, spearheads the ritual alongside novice Sister Michaela. They clash with Church hierarchy and alongside a skeptical priest, Father Paolo, who favours medical solutions. Throughout, they uncover dark secrets hidden in their convent.', 'Cast not specified', 'Director not specified', '1100031427')">
+                <div class="movie-thumbnail">
+                    <img src="https://i.ibb.co/tTW30rWS/Dark-Nuns.jpg" alt="Dark Nuns">
+                    <div class="play-button"><i class="fas fa-play"></i></div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title">Dark Nuns</h3>
+                    <div class="movie-meta">
+                        <span class="movie-rating">PG-13</span>
+                        <span class="movie-year">2025</span>
+                        <span class="movie-duration">1h 54m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card #3 -->
+            <div class="movie-card" onclick="showMovieDetails('Den of Thieves 2: Pantera', 'https://image.tmdb.org/t/p/w500/rxcyxxarD17xMliStDEhM6y2AYQ.jpg', 'R', '2025', '2h 24m', 'Big Nick tracks Donnie from the U.S. to Europe, infiltrating the Panther gang tied to the 2003 Antwerp diamond heist. Together they plot a high-stakes heist targeting the World Diamond Center in Nice, while Nick walks a fine line between cop and criminal.', 'Gerard Butler (Big Nick), O\'Shea Jackson Jr. (Donnie Wilson), Evin Ahmad, Salvatore Esposito, Meadow Williams, Swen Temmel', 'Christian Gudegast', '1100247488')">
+                <div class="movie-thumbnail">
+                    <img src="https://image.tmdb.org/t/p/w500/rxcyxxarD17xMliStDEhM6y2AYQ.jpg" alt="Den of Thieves 2: Pantera">
+                    <div class="play-button"><i class="fas fa-play"></i></div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title">Den of Thieves 2: Pantera</h3>
+                    <div class="movie-meta">
+                        <span class="movie-rating">R</span>
+                        <span class="movie-year">2025</span>
+                        <span class="movie-duration">2h 24m</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic TMDB Categories -->
+    <section id="tmdb-categories">
+        <!-- Categories will be populated by JavaScript -->
+    </section>
+
+    <!-- Movie Details Page -->
+    <div class="movie-details-page" id="movieDetailsPage">
+        <div class="movie-details-header" id="movieDetailsHeader">
+            <!-- Back Arrow -->
+            <div class="back-arrow" onclick="closeMovieDetails()">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+        </div>
+        <div class="movie-details-content">
+            <h1 id="movieDetailsTitle"></h1>
+            <div id="movieDetailsMeta" class="movie-details-meta"></div>
+            <div class="movie-details-buttons">
+                <button class="btn btn-primary" onclick="playVideo()">
+                    <i class="fas fa-play"></i> Play Now
+                </button>
+            </div>
+            <p id="movieDetailsDescription"></p>
+            <div class="movie-details-info">
+                <p><strong>Starring:</strong> <span id="movieDetailsStarring"></span></p>
+                <p><strong>Director:</strong> <span id="movieDetailsDirector"></span></p>
+            </div>
+        </div>
+        <div class="movie-details-footer">
+            <div>✔ My List</div>
+            <div>👍 Rate</div>
+            <div>🔗 Share</div>
+        </div>
+    </div>
+
+    <style>
+        #vimeoPlayerContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        #vimeoPlayerWrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1200px;
+            height: 0;
+            padding-bottom: 50.625%; /* 16:9 Aspect Ratio (9 / 16 = 0.5625) */
+        }
+
+        #vimeoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-back-arrow {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.3s ease;
+        }
+
+        .video-back-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+
+    <!-- Add a container for the Vimeo player -->
+    <div id="vimeoPlayerContainer">
+        <div class="video-back-arrow" onclick="closeVideoPlayer()">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+        <div id="vimeoPlayerWrapper"></div>
+    </div>
+
+    <!-- Include search functionality -->
+    <script src="./js/search.js"></script>
+
+    <script>
+        function showMovieDetails(title, poster, rating, year, duration, description, cast, director, vimeoId = '') {
+            const page = document.getElementById('movieDetailsPage');
+            document.getElementById('movieDetailsHeader').style.backgroundImage = `url(${poster})`;
+            document.getElementById('movieDetailsTitle').textContent = title;
+            document.getElementById('movieDetailsMeta').innerHTML = `
+                <span>${year}</span>
+                <span>${rating}</span>
+                <span>${duration}</span>
+            `;
+            document.getElementById('movieDetailsDescription').textContent = description;
+            document.getElementById('movieDetailsStarring').textContent = cast;
+            document.getElementById('movieDetailsDirector').textContent = director;
+            
+            // Update play button based on whether we have a Vimeo ID
+            const playButton = document.querySelector('.movie-details-buttons .btn-play');
+            if (vimeoId) {
+                playButton.style.display = 'flex';
+                playButton.onclick = (e) => {
+                    e.stopPropagation();
+                    playVideo();
+                };
+                // Store the Vimeo ID for the current movie
+                page.dataset.vimeoId = vimeoId;
+            } else {
+                playButton.style.display = 'none';
+                delete page.dataset.vimeoId;
+            }
+            
+            page.classList.add('active');
+        }
+
+        async function closeVideoPlayer() {
+            const playerContainer = document.getElementById('vimeoPlayerContainer');
+            const playerWrapper = document.getElementById('vimeoPlayerWrapper');
+            
+            if (playerContainer && playerWrapper) {
+                // Clean up the existing iframe
+                playerWrapper.innerHTML = '';
+                playerContainer.style.display = 'none';
+                
+                // Reset tracking variables
+                hasUserSeeked = false;
+                lastSaveTime = 0;
+                
+                // Exit fullscreen if we're in it
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => console.error(err));
+                } else if (document.webkitFullscreenElement) {
+                    document.webkitExitFullscreen().catch(err => console.error(err));
+                } else if (document.msFullscreenElement) {
+                    document.msExitFullscreen().catch(err => console.error(err));
+                }
+                
+                // Unlock screen orientation
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            }
+        }
+
+        async function closeMovieDetails() {
+            const page = document.getElementById('movieDetailsPage');
+            
+            // Close video player first (synchronously)
+            closeVideoPlayer();
+            
+            // Remove active class
+            page.classList.remove('active');
+            
+            // Restore body scrolling and touch events
+            document.body.style.overflow = 'auto';
+            document.body.style.touchAction = 'auto';
+            document.documentElement.style.overflow = 'auto';
+            
+            // Force a reflow
+            void document.body.offsetHeight;
+            
+            // Focus back to main content
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.setAttribute('tabindex', '-1');
+                mainContent.focus();
+                mainContent.removeAttribute('tabindex');
+            }
+        }
+
+        // Simple video progress tracking using localStorage
+        const videoProgress = {
+            // Save video progress
+            save: function(vimeoId, currentTime, duration) {
+                try {
+                    // Only save if watched for more than 10 seconds and less than 90%
+                    if (currentTime > 10 && (currentTime / duration) < 0.9) {
+                        localStorage.setItem(`fp_${vimeoId}`, currentTime.toString());
+                    } else if (currentTime < 5) {
+                        // If near the beginning, remove any saved progress
+                        this.clear(vimeoId);
+                    }
+                } catch (e) {
+                    console.error('Error saving video progress:', e);
+                }
+            },
+            
+            // Get saved progress
+            get: function(vimeoId) {
+                try {
+                    const time = localStorage.getItem(`fp_${vimeoId}`);
+                    return time ? parseFloat(time) : 0;
+                } catch (e) {
+                    console.error('Error getting video progress:', e);
+                    return 0;
+                }
+            },
+            
+            // Clear progress
+            clear: function(vimeoId) {
+                try {
+                    localStorage.removeItem(`fp_${vimeoId}`);
+                } catch (e) {
+                    console.error('Error clearing video progress:', e);
+                }
+            }
+        };
+        
+        // Track if user has manually seeked
+        let hasUserSeeked = false;
+        let lastSaveTime = 0;
+
+        async function playVideo() {
+            const page = document.getElementById('movieDetailsPage');
+            const vimeoId = page.dataset.vimeoId;
+            const playerContainer = document.getElementById('vimeoPlayerContainer');
+            const playerWrapper = document.getElementById('vimeoPlayerWrapper');
+            
+            if (!playerContainer || !playerWrapper) return;
+            
+            try {
+                // Get saved time before creating the iframe
+                const savedTime = videoProgress.get(vimeoId);
+                
+                // Prevent scrolling and touch events
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+                
+                // Create and configure the iframe
+                const iframe = document.createElement('iframe');
+                iframe.id = 'vimeoPlayer';
+                
+                // Add saved time to the URL if available
+                const timeParam = savedTime > 0 ? `#t=${Math.floor(savedTime)}` : '';
+                iframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&playsinline=1&title=0&byline=0&portrait=0&dnt=1&transparent=0&quality=1080p${timeParam}`;
+                
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+                iframe.setAttribute('webkit-playsinline', '1');
+                iframe.setAttribute('playsinline', '1');
+                iframe.allowFullscreen = true;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowfullscreen', '');
+                
+                // Clear and show the player
+                playerWrapper.innerHTML = '';
+                playerWrapper.appendChild(iframe);
+                playerContainer.style.display = 'block';
+                
+                // Set up message listener for Vimeo player events
+                window.addEventListener('message', handleVimeoMessage);
+                
+                // Store the Vimeo iframe reference
+                window.vimeoIframe = iframe;
+                
+                // Request fullscreen
+                const requestFullscreen = () => {
+                    const el = playerContainer;
+                    return (el.requestFullscreen || 
+                           el.webkitRequestFullscreen || 
+                           el.msRequestFullscreen).call(el);
+                };
+                
+                // Lock orientation if possible
+                const lockOrientation = () => {
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch(() => {});
+                    }
+                };
+                
+                // Go fullscreen first, then lock orientation
+                requestFullscreen().then(lockOrientation).catch(console.warn);
+                
+            } catch (error) {
+                console.error('Error playing video:', error);
+                closeVideoPlayer();
+            }
+        }
+        
+        // Handle Vimeo player messages
+        function handleVimeoMessage(event) {
+            // Only process messages from our Vimeo iframe
+            if (event.source !== window.vimeoIframe?.contentWindow) return;
+            
+            try {
+                const data = JSON.parse(event.data);
+                const vimeoId = document.getElementById('movieDetailsPage')?.dataset.vimeoId;
+                
+                if (!vimeoId) return;
+                
+                // Handle play progress
+                if (data.event === 'playProgress' || data.event === 'timeupdate') {
+                    const currentTime = data.data?.seconds || 0;
+                    const duration = data.data?.duration || 0;
+                    const now = Date.now();
+                    
+                    // Only save progress every 5 seconds to reduce localStorage writes
+                    if (now - lastSaveTime > 5000 && !hasUserSeeked) {
+                        videoProgress.save(vimeoId, currentTime, duration);
+                        lastSaveTime = now;
+                    }
+                }
+                
+                // Handle seeking
+                if (data.event === 'seek') {
+                    hasUserSeeked = true;
+                    const seekTime = data.data?.seconds || 0;
+                    
+                    // If seeking to near the beginning, clear the saved progress
+                    if (seekTime < 5) {
+                        videoProgress.clear(vimeoId);
+                    }
+                }
+                
+                // Reset seek flag when video starts playing
+                if (data.event === 'play') {
+                    hasUserSeeked = false;
+                }
+                
+                // Clear progress when video ends
+                if (data.event === 'ended') {
+                    videoProgress.clear(vimeoId);
+                }
+                
+            } catch (e) {
+                console.error('Error processing Vimeo message:', e);
+            }
+        }
+        
+
+        // Close the movie details page when the back button is pressed
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const detailsPage = document.getElementById('movieDetailsPage');
+                const videoPlayer = document.getElementById('vimeoPlayerContainer');
+                
+                if (detailsPage && detailsPage.classList.contains('active')) {
+                    detailsPage.classList.remove('active');
+                }
+                
+                if (videoPlayer && videoPlayer.style.display === 'block') {
+                    closeVideoPlayer();
+                }
+            }
+        });
+        
+        // Search functionality
+        const searchModal = document.getElementById('searchModal');
+        const openSearch = document.getElementById('openSearch');
+        const closeSearch = document.getElementById('closeSearch');
+        const searchInput = document.getElementById('movieSearchInput');
+        
+        if (openSearch) {
+            openSearch.addEventListener('click', () => {
+                searchModal.style.display = 'flex';
+                if (searchInput) searchInput.focus();
+            });
+        }
+        
+        if (closeSearch) {
+            closeSearch.addEventListener('click', () => {
+                searchModal.style.display = 'none';
+            });
+        }
+        // Close video player function
+        // Prevent touch events from interfering with video playback
+        function preventTouch(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+
+        function closeVideoPlayer() {
+            const playerContainer = document.getElementById('vimeoPlayerContainer');
+            const playerWrapper = document.getElementById('vimeoPlayerWrapper');
+            
+            if (!playerContainer || !playerWrapper) return;
+            
+            try {
+                // Immediately hide the player
+                playerContainer.style.display = 'none';
+                
+                // Clear the iframe
+                playerWrapper.innerHTML = '';
+                
+                // Exit fullscreen if needed
+                if (document.fullscreenElement) {
+                    (document.exitFullscreen || 
+                     document.webkitExitFullscreen || 
+                     document.msExitFullscreen).call(document).catch(() => {});
+                }
+                
+                // Unlock orientation
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock().catch(() => {});
+                }
+                
+            } catch (error) {
+                console.warn('Error during video player cleanup:', error);
+            } finally {
+                // Always restore these states
+                document.body.style.overflow = 'auto';
+                document.body.style.touchAction = 'auto';
+                document.documentElement.style.overflow = 'auto';
+                
+                // Remove any URL fragments
+                if (window.location.hash) {
+                    history.replaceState('', document.title, window.location.pathname + window.location.search);
+                }
+                
+                // Force a reflow
+                void document.body.offsetHeight;
+            }
+        }
+    </script>
+
+    <!-- Movie Details Page -->
+    <div id="movieDetailsPage" class="movie-details-page">
+        <div class="movie-details-backdrop" id="movieDetailsHeader">
+            <div class="backdrop-overlay"></div>
+            <button class="back-button" onclick="closeMovieDetails()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+        <div class="movie-details-content">
+            <h1 id="movieDetailsTitle">Movie Title</h1>
+            <div class="movie-details-meta" id="movieDetailsMeta">
+                <span>2023</span>
+                <span>PG-13</span>
+                <span>2h 30m</span>
+            </div>
+            <div class="movie-details-buttons">
+                <button class="btn btn-play" onclick="playVideo()">
+                    <i class="fas fa-play"></i> Play Now
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> My List
+                </button>
+            </div>
+            <div class="movie-details-description">
+                <p id="movieDetailsDescription">Movie description goes here.</p>
+            </div>
+            <div class="movie-details-info">
+                <div class="info-row">
+                    <span class="info-label">Starring:</span>
+                    <span class="info-value" id="movieDetailsStarring">Actor 1, Actor 2, Actor 3</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Director:</span>
+                    <span class="info-value" id="movieDetailsDirector">Director Name</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .movie-details-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #141414;
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .movie-details-page.active {
+            display: block;
+        }
+        
+        .movie-details-backdrop {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .backdrop-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to top, #141414 0%, transparent 100%);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .movie-details-content {
+            padding: 20px;
+            margin-top: -100px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .movie-details-meta {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            color: #999;
+        }
+        
+        .movie-details-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-play {
+            background: #e50914;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .movie-details-description {
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        
+        .movie-details-info {
+            margin-top: 20px;
+        }
+        
+        .info-row {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        
+        .info-label {
+            color: #777;
+            min-width: 80px;
+        }
+        
+        .info-value {
+            color: #fff;
+            flex: 1;
+        }
+    </style>
+</body>
+</html>
